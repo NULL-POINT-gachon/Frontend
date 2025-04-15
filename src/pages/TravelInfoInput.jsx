@@ -1,19 +1,15 @@
 import { Box, Button, Text } from "@chakra-ui/react";
 import { useState } from "react";
-
-import PeopleSelect from "../components/PeopleSelect";
-import { useTravel } from "../contexts/TravelContext";
 import { useNavigate } from "react-router-dom";
+import { useTravel } from "../contexts/TravelContext";
+import PeopleSelect from "../components/PeopleSelect";
 
 function TravelInfoInput() {
   const navigate = useNavigate();
   const { travelData, setTravelData } = useTravel();
   const [formData, setFormData] = useState({
-    people: null,
-    moods: [],
+    people: travelData.people || null,
   });
-
-  const { dateRange } = travelData;
 
   const handleNext = () => {
     setTravelData((prev) => ({
@@ -23,23 +19,26 @@ function TravelInfoInput() {
     navigate("/start/mood");
   };
 
+  const handleBack = () => {
+    navigate("/survey/date");
+  };
+
   return (
     <Box p={6}>
-      {/* 선택한 날짜 표시 */}
-      {dateRange?.[0] && dateRange?.[1] && (
+      {travelData.dateRange?.[0] && travelData.dateRange?.[1] && (
         <Text fontWeight="medium" mb={4} textAlign="center">
-          선택한 날짜: {dateRange[0].toLocaleDateString()} ~ {dateRange[1].toLocaleDateString()}
+          선택한 날짜: {travelData.dateRange[0].toLocaleDateString()} ~{" "}
+          {travelData.dateRange[1].toLocaleDateString()}
         </Text>
       )}
 
-      {/* 인원 선택 */}
       <PeopleSelect
         value={formData.people}
         onChange={(val) => setFormData({ ...formData, people: val })}
       />
 
-      {/* 하단 버튼 */}
-      <Box mt={8} display="flex" justifyContent="flex-end">
+      <Box mt={8} display="flex" justifyContent="space-between">
+        <Button onClick={handleBack}>이전</Button>
         <Button
           colorScheme="blue"
           onClick={handleNext}
