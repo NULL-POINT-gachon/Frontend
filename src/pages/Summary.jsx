@@ -1,5 +1,5 @@
-// Summary.jsx
-import { Box, Heading, VStack, Text, Button, HStack, Tag } from "@chakra-ui/react";
+import { useState } from "react";
+import { Box, Heading, VStack, Text, Button, HStack, Tag, Alert, AlertIcon } from "@chakra-ui/react";
 import { useNavigate } from "react-router-dom";
 import { useTravel } from "../contexts/TravelContext";
 
@@ -7,9 +7,21 @@ function Summary() {
   const navigate = useNavigate();
   const { travelData } = useTravel();
   const { dateRange, people, moods } = travelData;
+  const [error, setError] = useState(null); // 에러 상태 추가
 
   const formatDate = (date) =>
     date ? new Date(date).toLocaleDateString() : "날짜 미선택";
+
+  const handleSubmit = async () => {
+    try {
+      setError(null); // 기존 오류 초기화
+      // TODO: 실제 서버 요청 코드로 대체 예정
+      throw new Error("서버 오류 발생"); // 임시 실패 시뮬레이션
+      // 성공 시 navigate("/start/result")
+    } catch (err) {
+      setError("제출 실패: 서버에 문제가 발생했습니다. 잠시 후 다시 시도해주세요.");
+    }
+  };
 
   return (
     <Box p={6} maxW="600px" mx="auto" textAlign="center">
@@ -28,8 +40,16 @@ function Summary() {
         </Box>
       </VStack>
 
+      {/* 에러 메시지 출력 */}
+      {error && (
+        <Alert status="error" mt={6}>
+          <AlertIcon />
+          {error}
+        </Alert>
+      )}
+
       <HStack mt={8} spacing={4} justify="center">
-        <Button colorScheme="blue" onClick={() => navigate("/start/result")}>AI 분석 결과 보기</Button>
+        <Button colorScheme="blue" onClick={handleSubmit}>AI 분석 결과 보기</Button>
         <Button variant="outline" onClick={() => navigate("/")}>다시 작성하기</Button>
       </HStack>
     </Box>
