@@ -6,6 +6,7 @@ import LoginPage from "./pages/LoginPage";
 import SignUpPage from "./pages/SignUpPage";
 import TravelInfoInput from "./pages/TravelInfoInput";
 import MoodInput from "./pages/MoodInput";
+import Summary from "./pages/Summary";      
 import ResultPage from "./pages/ResultPage";
 
 import { AuthProvider } from "./contexts/AuthContext";
@@ -37,6 +38,14 @@ function App() {
               element={
                 <PrivateRoute>
                   <MoodInput />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/summary"
+              element={
+                <PrivateRoute>
+                  <Summary />
                 </PrivateRoute>
               }
             />
