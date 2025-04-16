@@ -23,27 +23,77 @@ function SignUpPage() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const isValidUsername = (username) => /^[a-zA-Z0-9]{4,12}$/.test(username);
+  const isValidPassword = (password) =>
+    /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d!@#$%^&*()]{8,}$/.test(password);
+  const isValidBirthdate = (dateStr) => /^\d{4}-\d{2}-\d{2}$/.test(dateStr);
+
+  const getAge = (birthdate) => {
+    const today = new Date();
+    const birth = new Date(birthdate);
+    let age = today.getFullYear() - birth.getFullYear();
+    const m = today.getMonth() - birth.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
+      age--;
+    }
+    return age;
+  };
+
+  const existingUsernames = ["admin", "test", "guest"];
+
   const handleSignUp = (e) => {
-    e.preventDefault(); //  form 기본 동작 방지
+    e.preventDefault();
     setError("");
 
-    if (!formData.username || !formData.name || !formData.birthdate || !formData.password || !formData.confirmPassword) {
+    const { username, name, birthdate, password, confirmPassword } = formData;
+
+    if (!username || !name || !birthdate || !password || !confirmPassword) {
       setError("모든 필드를 입력하세요.");
       return;
     }
-    if (formData.password !== formData.confirmPassword) {
+
+    if (!isValidUsername(username)) {
+      setError("아이디는 영문/숫자 조합 4~12자여야 합니다.");
+      return;
+    }
+
+    if (existingUsernames.includes(username)) {
+      setError("이미 사용 중인 아이디입니다.");
+      return;
+    }
+
+    if (!isValidBirthdate(birthdate)) {
+      setError("생년월일은 YYYY-MM-DD 형식으로 입력해주세요.");
+      return;
+    }
+
+    if (getAge(birthdate) < 14) {
+      setError("만 14세 이상만 가입 가능합니다.");
+      return;
+    }
+
+    if (!isValidPassword(password)) {
+      setError("비밀번호는 8자 이상이며, 영문과 숫자를 포함해야 합니다.");
+      return;
+    }
+
+    if (password === username) {
+      setError("비밀번호는 아이디와 같을 수 없습니다.");
+      return;
+    }
+
+    if (password !== confirmPassword) {
       setError("비밀번호가 일치하지 않습니다.");
       return;
     }
 
     alert("회원가입 성공!");
-    navigate("/login"); // 회원가입 완료 후 로그인 화면으로 이동
+    navigate("/login");
   };
 
   return (
     <Flex align="center" justify="center" h="100vh" bg="gray.50">
       <Box w="400px" bg="white" p={8} boxShadow="md" borderRadius="lg">
-        {/* form 태그로 감싸기 */}
         <form onSubmit={handleSignUp}>
           <VStack spacing={4} align="stretch">
             <Text fontSize="xl" fontWeight="bold" textAlign="center">회원가입</Text>
