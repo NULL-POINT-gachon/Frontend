@@ -30,7 +30,7 @@ function Summary() {
 
       <HStack mt={8} spacing={4} justify="center">
         <Button colorScheme="blue" onClick={() => navigate("/start/result")}>AI 분석 결과 보기</Button>
-        <Button variant="outline" onClick={() => navigate("/survey/date")}>다시 작성하기</Button>
+        <Button variant="outline" onClick={() => navigate("/")}>다시 작성하기</Button>
       </HStack>
     </Box>
   );
