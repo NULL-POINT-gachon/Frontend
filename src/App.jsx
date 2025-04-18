@@ -6,8 +6,9 @@ import LoginPage from "./pages/LoginPage";
 import SignUpPage from "./pages/SignUpPage";
 import TravelInfoInput from "./pages/TravelInfoInput";
 import MoodInput from "./pages/MoodInput";
-import Summary from "./pages/Summary";      
+import Summary from "./pages/Summary";
 import ResultPage from "./pages/ResultPage";
+import MyPage from "./pages/MyPage"; // 마이페이지 추가
 
 import { AuthProvider } from "./contexts/AuthContext";
 import { TravelProvider } from "./contexts/TravelContext";
@@ -24,7 +25,7 @@ function App() {
             <Route path="/login" element={<LoginPage />} />
             <Route path="/signup" element={<SignUpPage />} />
 
-            {/* 설문 단계 (보호된 경로) */}
+            {/* 보호된 경로 (로그인 필요) */}
             <Route
               path="/survey/people"
               element={
@@ -54,6 +55,14 @@ function App() {
               element={
                 <PrivateRoute>
                   <ResultPage />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/mypage"
+              element={
+                <PrivateRoute>
+                  <MyPage />
                 </PrivateRoute>
               }
             />
