@@ -19,7 +19,9 @@ function LoginPage() {
   const { login } = useAuth();
 
   const handleLogin = (e) => {
+
     e.preventDefault(); // 폼 제출 기본 동작 방지
+
     setError('');
 
     if (!loginId.trim() || !password.trim()) {
