@@ -4,6 +4,7 @@ import { ChakraProvider } from "@chakra-ui/react";
 
 import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/LoginPage"; 
+import SignUpPage from "./pages/SignUpPage";
 import { TravelProvider } from "./contexts/TravelContext";
 import { AuthProvider } from "./contexts/AuthContext";
 import PrivateRoute from "./components/PrivateRoute";
@@ -20,6 +21,7 @@ function App() {
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/login" element={<LoginPage />} /> 
+            <Route path="/signup" element={<SignUpPage />} />
             
             {/* 보호된 경로 */}
             <Route

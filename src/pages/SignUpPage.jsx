@@ -1,3 +1,4 @@
+import React from "react";
 import { useState } from "react";
 import {
   Box, Input, Button, Text, VStack, InputGroup,
@@ -5,9 +6,12 @@ import {
 } from "@chakra-ui/react";
 import { ViewIcon, ViewOffIcon } from "@chakra-ui/icons";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";  // 추가
 
 function SignUpPage() {
   const navigate = useNavigate();
+  const { login } = useAuth();  // 추가
+
   const [formData, setFormData] = useState({
     username: "",
     name: "",
@@ -88,7 +92,9 @@ function SignUpPage() {
     }
 
     alert("회원가입 성공!");
-    navigate("/login");
+
+    login(username);         // 바로 로그인 처리
+    navigate("/");           // 메인으로 이동
   };
 
   return (
@@ -99,73 +105,33 @@ function SignUpPage() {
             <Text fontSize="xl" fontWeight="bold" textAlign="center">회원가입</Text>
 
             <Text fontSize="sm">아이디</Text>
-            <Input
-              placeholder="아이디 입력"
-              name="username"
-              value={formData.username}
-              onChange={handleChange}
-            />
+            <Input name="username" value={formData.username} onChange={handleChange} placeholder="아이디 입력" />
 
             <Text fontSize="sm">이름</Text>
-            <Input
-              placeholder="이름 입력"
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
-            />
+            <Input name="name" value={formData.name} onChange={handleChange} placeholder="이름 입력" />
 
             <Text fontSize="sm">생년월일</Text>
-            <Input
-              placeholder="YYYY-MM-DD"
-              type="date"
-              name="birthdate"
-              value={formData.birthdate}
-              onChange={handleChange}
-            />
+            <Input name="birthdate" type="date" value={formData.birthdate} onChange={handleChange} />
 
             <Text fontSize="sm">비밀번호</Text>
             <InputGroup>
-              <Input
-                placeholder="비밀번호 입력"
-                type={showPassword ? "text" : "password"}
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-              />
+              <Input name="password" type={showPassword ? "text" : "password"} value={formData.password} onChange={handleChange} placeholder="비밀번호 입력" />
               <InputRightElement>
-                <IconButton
-                  icon={showPassword ? <ViewOffIcon /> : <ViewIcon />}
-                  onClick={() => setShowPassword(!showPassword)}
-                  variant="ghost"
-                  aria-label="비밀번호 보기"
-                />
+                <IconButton icon={showPassword ? <ViewOffIcon /> : <ViewIcon />} onClick={() => setShowPassword(!showPassword)} variant="ghost" aria-label="비밀번호 보기" />
               </InputRightElement>
             </InputGroup>
 
             <Text fontSize="sm">비밀번호 확인</Text>
             <InputGroup>
-              <Input
-                placeholder="비밀번호 확인"
-                type={showConfirmPassword ? "text" : "password"}
-                name="confirmPassword"
-                value={formData.confirmPassword}
-                onChange={handleChange}
-              />
+              <Input name="confirmPassword" type={showConfirmPassword ? "text" : "password"} value={formData.confirmPassword} onChange={handleChange} placeholder="비밀번호 확인" />
               <InputRightElement>
-                <IconButton
-                  icon={showConfirmPassword ? <ViewOffIcon /> : <ViewIcon />}
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  variant="ghost"
-                  aria-label="비밀번호 확인 보기"
-                />
+                <IconButton icon={showConfirmPassword ? <ViewOffIcon /> : <ViewIcon />} onClick={() => setShowConfirmPassword(!showConfirmPassword)} variant="ghost" aria-label="비밀번호 확인 보기" />
               </InputRightElement>
             </InputGroup>
 
             {error && <Text color="red.500" fontSize="sm">{error}</Text>}
 
-            <Button type="submit" colorScheme="blue" w="full">
-              회원가입
-            </Button>
+            <Button type="submit" colorScheme="blue" w="full">회원가입</Button>
 
             <Divider />
 
