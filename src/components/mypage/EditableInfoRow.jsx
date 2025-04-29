@@ -1,4 +1,5 @@
 // src/components/mypage/EditableInfoRow.jsx
+import React from "react";
 import {
     Flex,
     Text,
