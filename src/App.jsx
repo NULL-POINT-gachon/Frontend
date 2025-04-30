@@ -11,6 +11,7 @@ import Summary from "./pages/Summary";
 import MyPage from "./pages/MyPage";
 import ProfilePage from "./pages/ProfilePage";
 import AccountDeletePage from "./pages/AccountDeletePage";
+import Result from "./pages/Result";
 
 import { TravelProvider } from "./contexts/TravelContext";
 import { AuthProvider } from "./contexts/AuthContext";
@@ -52,6 +53,17 @@ function App() {
                   </PrivateRoute>
                 }
               />
+
+              <Route
+                path="/result"
+                element={
+                  <PrivateRoute>
+                    <Result />
+                  </PrivateRoute>
+                }
+              />
+
+              
               <Route
                 path="/mypage"
                 element={
