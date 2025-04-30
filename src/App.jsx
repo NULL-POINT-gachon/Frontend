@@ -15,6 +15,7 @@ import Result from "./pages/Result";
 import PreferenceSurvey from "./pages/PreferenceSurvey";
 import FinalRecommendation from "./pages/FinalRecommendation";
 import HotDestinationDetail from "./pages/HotDestinationDetail";
+import PlanRecommendationPage from "./pages/PlanRecommendationPage";
 
 import { TravelProvider } from "./contexts/TravelContext";
 import { AuthProvider } from "./contexts/AuthContext";
@@ -113,6 +114,9 @@ function App() {
                 }
               />
             </Route>
+
+            {/* 레이아웃 없이 넓게 써야 하는 페이지는 Layout 밖에 배치 */}
+            <Route path="/plan" element={<PlanRecommendationPage />} />
           </Routes>
         </TravelProvider>
       </AuthProvider>
