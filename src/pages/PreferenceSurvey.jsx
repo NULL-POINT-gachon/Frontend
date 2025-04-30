@@ -21,7 +21,7 @@ import {
   } from "@chakra-ui/react";
   import { useState } from "react";
   import { useNavigate } from "react-router-dom";
-  import axios from "axios";
+  //import axios from "axios";
   
   function PreferenceSurvey() {
     const [formData, setFormData] = useState({
@@ -62,11 +62,11 @@ import {
         setLoading(true);
         setError("");
   
-        await axios.post("/api/survey-detail", formData, {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
+        // await axios.post("/api/survey-detail", formData, {
+        //   headers: {
+        //     "Content-Type": "application/json",
+        //   },
+        // });
   
         navigate("/final-recommendation");
       } catch (err) {

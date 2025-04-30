@@ -13,6 +13,7 @@ import ProfilePage from "./pages/ProfilePage";
 import AccountDeletePage from "./pages/AccountDeletePage";
 import Result from "./pages/Result";
 import PreferenceSurvey from "./pages/PreferenceSurvey";
+import FinalRecommendation from "./pages/FinalRecommendation";
 
 import { TravelProvider } from "./contexts/TravelContext";
 import { AuthProvider } from "./contexts/AuthContext";
@@ -68,6 +69,13 @@ function App() {
               path="/preference"
               element={
                 <PreferenceSurvey/>
+              }
+              />
+
+<Route
+              path="/final-recommendation"
+              element={
+                <FinalRecommendation/>
               }
               />
 
