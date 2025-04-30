@@ -10,7 +10,7 @@ import {
 } from "@chakra-ui/react";
 import { useNavigate } from "react-router-dom";
 import { useTravel } from "../contexts/TravelContext";
-import GradientBanner from "../components/GradientBanner";
+
 
 const moods = ["설렘", "힐링", "감성", "여유", "활력", "모험", "로맨틱", "재충전"];
 
@@ -34,7 +34,6 @@ function MoodInput() {
 
   return (
     <>
-      <GradientBanner>
         <Box textAlign="center" py={10}>
           <Heading size="md" mb={6}>
             이번 여행에서 느끼고 싶은 감정은?
@@ -60,7 +59,6 @@ function MoodInput() {
             </Text>
           )}
         </Box>
-      </GradientBanner>
 
       <Box mt={8} px={6} display="flex" justifyContent="space-between">
         <Button variant="outline" onClick={() => navigate("/survey/people")}>

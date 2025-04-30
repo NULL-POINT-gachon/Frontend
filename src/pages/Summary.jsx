@@ -50,7 +50,13 @@ function Summary() {
       )}
 
       <HStack mt={8} spacing={4} justify="center">
-        <Button colorScheme="blue" onClick={handleSubmit}>AI 분석 결과 보기</Button>
+      <Button
+            size="lg"
+            colorScheme="blue"
+            onClick={() => navigate("/result")}
+        >
+            AI 분석 결과 보기
+        </Button>
         <Button variant="outline" onClick={() => navigate("/")}>다시 작성하기</Button>
       </HStack>
     </Box>
