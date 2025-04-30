@@ -18,6 +18,9 @@ import HotDestinationDetail from "./pages/HotDestinationDetail";
 import PlanRecommendationPage from "./pages/PlanRecommendationPage";
 import FinalRecommendationPage from "./pages/FinalRecommendationPage";
 
+import PlanDetailPage from "./pages/PlanDetailPage"; 
+
+
 import { TravelProvider } from "./contexts/TravelContext";
 import { AuthProvider } from "./contexts/AuthContext";
 
@@ -89,6 +92,8 @@ function App() {
               }
               />
 
+
+
     
             </Route>
 
@@ -120,6 +125,17 @@ function App() {
                   </PrivateRoute>
                 }
               />
+
+              
+<Route
+  path="/plan/:region"
+  element={
+    <PrivateRoute>
+      <PlanDetailPage />
+    </PrivateRoute>
+  }
+/>
+
           </Routes>
         </TravelProvider>
       </AuthProvider>
