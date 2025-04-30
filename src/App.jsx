@@ -1,15 +1,23 @@
-// src/App.jsx
 import React from "react";
+import { Routes, Route } from "react-router-dom";
 import { ChakraProvider } from "@chakra-ui/react";
+
 import HomePage from "./pages/HomePage";
-import { TravelProvider } from "./contexts/TravelContext"; 
+import LoginPage from "./pages/LoginPage"; 
+import { TravelProvider } from "./contexts/TravelContext";
+import { AuthProvider } from "./contexts/AuthContext";
 
 function App() {
   return (
     <ChakraProvider>
-      <TravelProvider>
-        <HomePage />
-      </TravelProvider>
+      <AuthProvider>
+        <TravelProvider>
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/login" element={<LoginPage />} /> 
+          </Routes>
+        </TravelProvider>
+      </AuthProvider>
     </ChakraProvider>
   );
 }

@@ -1,3 +1,4 @@
+import React from "react";
 import { useNavigate } from "react-router-dom";
 import { useState } from 'react';
 import {
@@ -7,8 +8,7 @@ import {
 } from '@chakra-ui/react';
 import { ViewIcon, ViewOffIcon } from '@chakra-ui/icons';
 import { FcGoogle } from 'react-icons/fc';
-
-//import { useAuth } from "../contexts/AuthContext";
+import { useAuth } from "../contexts/AuthContext";
 
 function LoginPage() {
   const [loginId, setLoginId] = useState('');
@@ -32,7 +32,7 @@ function LoginPage() {
     // 추후 백엔드 연동 예정
     console.log("입력 ID:", loginId);
     console.log("입력 PW:", password);
-    login({ loginId });
+    login(loginId);
     navigate("/", { replace: true });
   };
 
