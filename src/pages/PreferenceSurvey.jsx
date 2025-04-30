@@ -28,9 +28,7 @@ import {
       type: "",
       activity: "",
       transport: "",
-      intensity: 1, // 기본값 1로 변경
-      stay: "",
-      interests: [],
+      intensity: 1 // 기본값 1로 변경,
     });
   
     const [error, setError] = useState("");
@@ -53,9 +51,7 @@ import {
       formData.type &&
       formData.activity &&
       formData.transport &&
-      formData.intensity > 0 &&
-      formData.stay &&
-      formData.interests.length > 0;
+      formData.intensity > 0;
   
     const handleSubmit = async () => {
       try {
@@ -168,55 +164,8 @@ import {
             </Text>
           </Box>
   
-          {/* 5. 숙소 유형 */}
-          <Box mb={6}>
-            <Text fontSize="sm" color="gray.500">Q5</Text>
-            <Text fontSize="lg" fontWeight="bold" mb={3}>선호 숙소 유형</Text>
-            <Wrap>
-              {["호텔", "게스트하우스", "펜션", "캠핑"].map((item) => (
-                <WrapItem key={item}>
-                  <Button
-                    variant={formData.stay === item ? "solid" : "outline"}
-                    colorScheme="purple"
-                    onClick={() => setFormData({ ...formData, stay: item })}
-                  >
-                    {item}
-                  </Button>
-                </WrapItem>
-              ))}
-            </Wrap>
-          </Box>
-  
-          {/* 6. 관심사 */}
-          <Box mb={6}>
-            <Text fontSize="sm" color="gray.500">Q6</Text>
-            <Text fontSize="lg" fontWeight="bold" mb={3}>관심사 (복수 선택 가능)</Text>
-            <Wrap>
-              {[
-                "감성 여행",
-                "로컬 체험",
-                "사진 찍기",
-                "여유로운 일정",
-                "사람 많은 곳",
-                "조용한 장소",
-              ].map((item) => (
-                <WrapItem key={item}>
-                  <Tag
-                    size="lg"
-                    variant={formData.interests.includes(item) ? "solid" : "subtle"}
-                    colorScheme={formData.interests.includes(item) ? "blue" : "gray"}
-                    borderRadius="full"
-                    onClick={() => handleInterestToggle(item)}
-                    cursor="pointer"
-                    px={4}
-                    py={2}
-                  >
-                    <TagLabel>{item}</TagLabel>
-                  </Tag>
-                </WrapItem>
-              ))}
-            </Wrap>
-          </Box>
+
+
   
           {/* 에러 메시지 */}
           {error && (
