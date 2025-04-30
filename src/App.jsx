@@ -89,8 +89,13 @@ function App() {
               }
               />
 
-              
-              <Route
+    
+            </Route>
+
+            {/* 레이아웃 없이 넓게 써야 하는 페이지는 Layout 밖에 배치 */}
+            <Route path="/plan" element={<PlanRecommendationPage />} />
+            <Route path="/final-recommendation-page" element={<FinalRecommendationPage />} />
+            <Route
                 path="/mypage"
                 element={
                   <PrivateRoute>
@@ -98,7 +103,8 @@ function App() {
                   </PrivateRoute>
                 }
               />
-              <Route
+
+<Route
                 path="/mypage/profile"
                 element={
                   <PrivateRoute>
@@ -114,11 +120,6 @@ function App() {
                   </PrivateRoute>
                 }
               />
-            </Route>
-
-            {/* 레이아웃 없이 넓게 써야 하는 페이지는 Layout 밖에 배치 */}
-            <Route path="/plan" element={<PlanRecommendationPage />} />
-            <Route path="/final-recommendation-page" element={<FinalRecommendationPage />} />
           </Routes>
         </TravelProvider>
       </AuthProvider>
