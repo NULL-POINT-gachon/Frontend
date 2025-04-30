@@ -12,6 +12,7 @@ import MyPage from "./pages/MyPage";
 import ProfilePage from "./pages/ProfilePage";
 import AccountDeletePage from "./pages/AccountDeletePage";
 import Result from "./pages/Result";
+import PreferenceSurvey from "./pages/PreferenceSurvey";
 
 import { TravelProvider } from "./contexts/TravelContext";
 import { AuthProvider } from "./contexts/AuthContext";
@@ -61,6 +62,13 @@ function App() {
                     <Result />
                   </PrivateRoute>
                 }
+              />
+
+              <Route
+              path="/preference"
+              element={
+                <PreferenceSurvey/>
+              }
               />
 
               

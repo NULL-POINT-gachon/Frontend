@@ -64,7 +64,7 @@ import {
       try {
         // 실제 선택 결과 전송
         // await axios.post("/api/selected-city", { city: selectedCity });
-        navigate("/survey/preference");
+        navigate("/preference");
       } catch (error) {
         alert("도시 전송 실패");
       }
@@ -113,7 +113,7 @@ import {
         )}
   
         <Box textAlign="center" mt={6}>
-          <Button variant="link" colorScheme="gray" onClick={() => navigate("/survey/date")}>
+          <Button variant="link" colorScheme="gray" onClick={() => navigate("/")}>
             ⬅️ 다시 분석하기
           </Button>
         </Box>
