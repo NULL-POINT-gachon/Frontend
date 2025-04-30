@@ -1,4 +1,5 @@
-import { useState } from "react";
+// src/components/DateFilterDropdown.jsx
+import React, { useState } from "react";
 import {
   Button,
   Box,
@@ -9,11 +10,11 @@ import {
 } from "@chakra-ui/react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { useTravel } from "../contexts/TravelContext";
+import { useTravel } from "../contexts/TravelContext"; // 다시 추가
 
 function DateFilterDropdown() {
   const [dateRange, setDateRange] = useState([null, null]);
-  const { setTravelData } = useTravel(); // 전역 상태 저장용
+  const { setTravelData } = useTravel(); // 복구 완료
 
   return (
     <Box>

@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+// src/pages/HomePage.jsx
+import React from "react";
 import {
   Box,
   Grid,
@@ -14,17 +15,13 @@ import {
 import { SearchIcon } from "@chakra-ui/icons";
 
 import Header from "../components/Header";
-import TravelSearchFilter from "../components/TravelSearchFilter";
-import TravelCardList from "../components/TravelCardList";
 import DateFilterDropdown from "../components/DateFilterDropdown";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../contexts/AuthContext";
-import { useTravel } from "../contexts/TravelContext";
+import { useTravel } from "../contexts/TravelContext"; // 다시 추가
 
 function HomePage() {
   const navigate = useNavigate();
-  const { user } = useAuth();
-  const { travelData } = useTravel();
+  const { travelData } = useTravel(); // 복구 완료
   const dateRange = travelData.dateRange || [null, null];
 
   const handleSearch = () => {
@@ -39,21 +36,13 @@ function HomePage() {
     <Box bg="white">
       <Header />
 
-      {/* 메인 배너 */}
       <Box textAlign="center" bgGradient="linear(to-b, blue.200, white)" py={10}>
-        {user && (
-          <Text fontSize="lg" fontWeight="medium" mb={2}>
-            {user.name || user.loginId}님
-          </Text>
-        )}
         <Heading size="xl">느낌표와 함께 최고의 여행을 떠나보세요!</Heading>
 
-        {/* 시작하기 버튼 (설문 직접 진입) */}
         <Button colorScheme="blue" mt={4} onClick={() => navigate("/survey/people")}>
           시작하기
         </Button>
 
-        {/* 날짜 선택 드롭다운 + 검색 아이콘 */}
         <HStack mt={4} justify="center">
           <DateFilterDropdown />
           <IconButton
@@ -63,17 +52,11 @@ function HomePage() {
             onClick={handleSearch}
           />
         </HStack>
-
-        {/* 여행지 키워드 필터 */}
-        <Box mt={6} display="flex" justifyContent="center">
-          <TravelSearchFilter />
-        </Box>
       </Box>
 
-      {/* 콘텐츠 영역 */}
       <Grid templateColumns="repeat(3, 1fr)" gap={6} p={10}>
         <GridItem colSpan={2}>
-          <TravelCardList />
+          {/* <TravelCardList /> */}
         </GridItem>
 
         <GridItem w="100%" bg="white" p={4} borderRadius="lg" boxShadow="sm">
