@@ -17,9 +17,7 @@ import FinalRecommendation from "./pages/FinalRecommendation";
 import HotDestinationDetail from "./pages/HotDestinationDetail";
 import PlanRecommendationPage from "./pages/PlanRecommendationPage";
 import FinalRecommendationPage from "./pages/FinalRecommendationPage";
-
-import PlanDetailPage from "./pages/PlanDetailPage"; 
-
+import PlanDetailPage from "./pages/PlanDetailPage";
 
 import { TravelProvider } from "./contexts/TravelContext";
 import { AuthProvider } from "./contexts/AuthContext";
@@ -33,10 +31,11 @@ function App() {
       <AuthProvider>
         <TravelProvider>
           <Routes>
-              <Route path="/" element={<HomePage />} />
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/signup" element={<SignUpPage />} />
-              <Route element={<Layout />}>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/signup" element={<SignUpPage />} />
+
+            <Route element={<Layout />}>
               <Route
                 path="/survey/people"
                 element={
@@ -61,7 +60,6 @@ function App() {
                   </PrivateRoute>
                 }
               />
-
               <Route
                 path="/result"
                 element={
@@ -70,37 +68,16 @@ function App() {
                   </PrivateRoute>
                 }
               />
-
+              <Route path="/preference" element={<PreferenceSurvey />} />
               <Route
-              path="/preference"
-              element={
-                <PreferenceSurvey/>
-              }
+                path="/final-recommendation"
+                element={<FinalRecommendation />}
               />
-
               <Route
-              path="/final-recommendation"
-              element={
-                <FinalRecommendation/>
-              }
+                path="hot-destinations/:id"
+                element={<HotDestinationDetail />}
               />
-
               <Route
-              path="hot-destinations/:id"
-              element={
-                <HotDestinationDetail/>
-              }
-              />
-
-
-
-    
-            </Route>
-
-            {/* 레이아웃 없이 넓게 써야 하는 페이지는 Layout 밖에 배치 */}
-            <Route path="/plan" element={<PlanRecommendationPage />} />
-            <Route path="/final-recommendation-page" element={<FinalRecommendationPage />} />
-            <Route
                 path="/mypage"
                 element={
                   <PrivateRoute>
@@ -108,8 +85,7 @@ function App() {
                   </PrivateRoute>
                 }
               />
-
-<Route
+              <Route
                 path="/mypage/profile"
                 element={
                   <PrivateRoute>
@@ -125,17 +101,19 @@ function App() {
                   </PrivateRoute>
                 }
               />
+              <Route
+                path="/plan/:region"
+                element={
+                  <PrivateRoute>
+                    <PlanDetailPage />
+                  </PrivateRoute>
+                }
+              />
+            </Route>
 
-              
-<Route
-  path="/plan/:region"
-  element={
-    <PrivateRoute>
-      <PlanDetailPage />
-    </PrivateRoute>
-  }
-/>
-
+            {/* 레이아웃 없이 넓게 써야 하는 페이지 */}
+            <Route path="/plan" element={<PlanRecommendationPage />} />
+            <Route path="/final-recommendation-page" element={<FinalRecommendationPage />} />
           </Routes>
         </TravelProvider>
       </AuthProvider>
