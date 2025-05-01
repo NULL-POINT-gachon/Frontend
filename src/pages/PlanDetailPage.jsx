@@ -18,7 +18,7 @@ import {
 import Header from "../components/Header";
 // import InviteModal from "../components/InviteModal";
 // import ReviewModal from "../components/ReviewModal";
-// import AddScheduleModal from "../components/admin/AddScheduleModal";
+import AddScheduleModal from "../components/AddScheduleModal";
 import ScheduleCard from "../components/ScheduleCard";
 
 const PlanDetailPage = () => {
@@ -148,8 +148,8 @@ const PlanDetailPage = () => {
 
         {/* 향후 모달 복원 예정 */}
         {/* <InviteModal isOpen={isInviteOpen} onClose={onInviteClose} regionName={regionName} startDate="2025.3.15" endDate="2025.3.18" />
-        <ReviewModal isOpen={isReviewOpen} onClose={onReviewClose} />
-        <AddScheduleModal isOpen={isAddOpen} onClose={onAddClose} onAdd={handleAddSchedule} /> */}
+        <ReviewModal isOpen={isReviewOpen} onClose={onReviewClose} />*/}
+        <AddScheduleModal isOpen={isAddOpen} onClose={onAddClose} onAdd={handleAddSchedule} /> 
       </Box>
     </>
   );
