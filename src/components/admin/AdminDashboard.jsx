@@ -15,6 +15,7 @@ import {
   BrainIcon,
   SettingsIcon,
   LogOutIcon,
+  CalendarIcon,
 } from "lucide-react";
 import { useContext } from "react";
 import { AdminAuthContext } from "../../contexts/AdminAuthContext";
@@ -90,12 +91,24 @@ const AdminDashboard = () => {
             </Button>
             <Button
               as={NavLink}
-              to="ai"
+              to="schedules"
               variant="ghost"
               colorScheme="teal"
               justifyContent="start"
-              leftIcon={<BrainIcon size={16} />}
+              leftIcon={<CalendarIcon size={16} />}
             >
+ 일정 관리
+ </Button>
+<Button
+  as={NavLink}
+  to="ai"
+  variant="ghost"
+  colorScheme="teal"
+  justifyContent="start"
+  leftIcon={<BrainIcon size={16} />}
+>
+ 
+
               AI 관리
             </Button>
             <Button
