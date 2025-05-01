@@ -44,6 +44,7 @@ import AdminReviewDetail from "./components/admin/AdminReviewDetail";
 
 import AdminSchedules from "./components/admin/AdminSchedules";
 
+import AdminAIPage from "./components/admin/AdminAIPage";
 
 import { TravelProvider } from "./contexts/TravelContext";
 import { AuthProvider } from "./contexts/AuthContext";
@@ -178,6 +179,8 @@ function App() {
             <Route path="reviews/:id" element={<AdminReviewDetail />} />
 
             <Route path="schedules" element={<AdminSchedules />} />
+
+            <Route path="ai" element={<AdminAIPage />} />
 
             </Route>
             </Route>
