@@ -6,7 +6,7 @@ import Header from "./Header";
 
 function Layout() {
   return (
-    <Box minHeight="100vh" bgGradient="linear(to-b, blue.100, white)">
+    <Box bg="white" minHeight="100vh" bgGradient="linear(to-b, blue.100, white)">
       <Header />
       <Box maxW="800px" mx="auto" mt={10} px={4}>
         <Outlet />
