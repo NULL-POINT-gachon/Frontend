@@ -22,6 +22,9 @@ import PlanDetailPage from "./pages/PlanDetailPage";
 
 
 import AdminLoginPage from "./pages/AdminLoginPage";
+import AdminDashboard from "./components/admin/AdminDashboard";
+import AdminHome from "./components/admin/AdminHome";
+import AdminRoute from "./components/admin/AdminRoute";
 
 
 import { TravelProvider } from "./contexts/TravelContext";
@@ -134,6 +137,14 @@ function App() {
   }
 />
 <Route path="/admin/login" element={<AdminLoginPage />} />
+<Route
+            path="/admin"
+            element={<AdminRoute />}
+          >
+            <Route element={<AdminDashboard />}>
+            <Route index element={<AdminHome />} />
+            </Route>
+            </Route>
 
           </Routes>
           
