@@ -26,6 +26,11 @@ import AdminDashboard from "./components/admin/AdminDashboard";
 import AdminHome from "./components/admin/AdminHome";
 import AdminRoute from "./components/admin/AdminRoute";
 
+import AdminNoticeList from "./components/admin/AdminNoticeList";
+import AdminNoticeCreate from "./components/admin/AdminNoticeCreate";
+import AdminNoticeEdit from "./components/admin/AdminNoticeEdit";
+import AdminNoticeDetail from "./components/admin/AdminNoticeDetail";
+
 
 import { TravelProvider } from "./contexts/TravelContext";
 import { AuthProvider } from "./contexts/AuthContext";
@@ -143,6 +148,10 @@ function App() {
           >
             <Route element={<AdminDashboard />}>
             <Route index element={<AdminHome />} />
+            <Route path="notices" element={<AdminNoticeList />} />
+            <Route path="notices/new" element={<AdminNoticeCreate />} />
+            <Route path="notices/:id/edit" element={<AdminNoticeEdit />} />
+            <Route path="notices/:id" element={<AdminNoticeDetail />} />
             </Route>
             </Route>
 
