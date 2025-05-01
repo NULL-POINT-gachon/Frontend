@@ -39,6 +39,9 @@ import AdminUsers from "./components/admin/AdminUsers";
 import AdminPlaces from "./components/admin/places/AdminPlaces";
 import AdminPlaceDetail from "./components/admin/places/AdminPlaceDetail";
 
+import AdminReviews from "./components/admin/AdminReviews";
+import AdminReviewDetail from "./components/admin/AdminReviewDetail";
+
 
 import { TravelProvider } from "./contexts/TravelContext";
 import { AuthProvider } from "./contexts/AuthContext";
@@ -168,6 +171,9 @@ function App() {
 
             <Route path="places" element={<AdminPlaces />} />
             <Route path="places/:id" element={<AdminPlaceDetail />} />
+
+            <Route path="reviews" element={<AdminReviews />} />
+            <Route path="reviews/:id" element={<AdminReviewDetail />} />
 
             </Route>
             </Route>
