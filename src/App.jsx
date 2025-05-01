@@ -21,16 +21,21 @@ import FinalRecommendationPage from "./pages/FinalRecommendationPage";
 import PlanDetailPage from "./pages/PlanDetailPage"; 
 
 
+import AdminLoginPage from "./pages/AdminLoginPage";
+
+
 import { TravelProvider } from "./contexts/TravelContext";
 import { AuthProvider } from "./contexts/AuthContext";
 
 import PrivateRoute from "./components/PrivateRoute";
 import Layout from "./components/Layout";
+import { AdminAuthProvider } from "./contexts/AdminAuthContext";
 
 function App() {
   return (
     <ChakraProvider>
       <AuthProvider>
+        <AdminAuthProvider>
         <TravelProvider>
           <Routes>
               <Route path="/" element={<HomePage />} />
@@ -109,14 +114,7 @@ function App() {
                 }
               />
 
-<Route
-                path="/mypage/profile"
-                element={
-                  <PrivateRoute>
-                    <ProfilePage />
-                  </PrivateRoute>
-                }
-              />
+<Route path="/mypage/profile" element={<PrivateRoute><ProfilePage /> </PrivateRoute>}/>
               <Route
                 path="/mypage/delete"
                 element={
@@ -135,9 +133,12 @@ function App() {
     </PrivateRoute>
   }
 />
+<Route path="/admin/login" element={<AdminLoginPage />} />
 
           </Routes>
+          
         </TravelProvider>
+        </AdminAuthProvider>
       </AuthProvider>
     </ChakraProvider>
   );
