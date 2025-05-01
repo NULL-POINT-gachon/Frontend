@@ -8,6 +8,8 @@
     "@chakra-ui/react": "^2.8.2",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
+    "@hello-pangea/dnd": "^18.0.1",
+    "@react-google-maps/api": "^2.20.6",
     "axios": "^1.8.4",
     "framer-motion": "^12.7.4",
     "react-datepicker": "^8.3.0",
