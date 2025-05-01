@@ -17,6 +17,7 @@ import FinalRecommendation from "./pages/FinalRecommendation";
 import HotDestinationDetail from "./pages/HotDestinationDetail";
 import PlanRecommendationPage from "./pages/PlanRecommendationPage";
 import FinalRecommendationPage from "./pages/FinalRecommendationPage";
+import PlanDetailPage from "./pages/PlanDetailPage";
 
 import { TravelProvider } from "./contexts/TravelContext";
 import { AuthProvider } from "./contexts/AuthContext";
@@ -100,17 +101,19 @@ function App() {
                   </PrivateRoute>
                 }
               />
+              <Route
+                path="/plan/:region"
+                element={
+                  <PrivateRoute>
+                    <PlanDetailPage />
+                  </PrivateRoute>
+                }
+              />
             </Route>
 
-            {/* 레이아웃 없이 넓게 써야 하는 페이지는 Layout 밖에 배치 */}
-            <Route
-              path="/plan"
-              element={<PlanRecommendationPage />}
-            />
-            <Route
-              path="/final-recommendation-page"
-              element={<FinalRecommendationPage />}
-            />
+            {/* 레이아웃 없이 넓게 써야 하는 페이지 */}
+            <Route path="/plan" element={<PlanRecommendationPage />} />
+            <Route path="/final-recommendation-page" element={<FinalRecommendationPage />} />
           </Routes>
         </TravelProvider>
       </AuthProvider>
