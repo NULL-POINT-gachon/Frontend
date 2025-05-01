@@ -24,7 +24,7 @@ function PreferenceSurvey() {
     activity: "",
     transport: "",
     intensity: 1,
-    interests: [], // 누락되어 있던 interests 초기화
+    interests: [], // 누락되지 않도록 유지
   });
 
   const [loading, setLoading] = useState(false);
@@ -61,8 +61,6 @@ function PreferenceSurvey() {
       navigate("/final-recommendation");
     } catch (err) {
       console.warn("서버 없음 - 다음 페이지로 강제 이동");
-
-      // 백엔드 없으므로 에러 무시하고 이동
       navigate("/final-recommendation");
     } finally {
       setLoading(false);
