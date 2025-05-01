@@ -36,6 +36,9 @@ import AdminQnaDetail from "./components/admin/AdminQnaDetail";
 
 import AdminUsers from "./components/admin/AdminUsers";
 
+import AdminPlaces from "./components/admin/places/AdminPlaces";
+import AdminPlaceDetail from "./components/admin/places/AdminPlaceDetail";
+
 
 import { TravelProvider } from "./contexts/TravelContext";
 import { AuthProvider } from "./contexts/AuthContext";
@@ -162,6 +165,9 @@ function App() {
             <Route path="qna/:id" element={<AdminQnaDetail />} />
 
             <Route path="users" element={<AdminUsers />} />
+
+            <Route path="places" element={<AdminPlaces />} />
+            <Route path="places/:id" element={<AdminPlaceDetail />} />
 
             </Route>
             </Route>
