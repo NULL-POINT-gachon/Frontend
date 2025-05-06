@@ -70,9 +70,40 @@ function HotDestinationDetail() {
     fetchPlace();
   }, [id, toast]);
 
-  const handleCreatePlan = () => {
-    if (place?.region) {
-      navigate("/plan", { state: { destination: place.region } });
+  const handleCreatePlan = async () => {
+    if (!place?.region) return;
+  
+    try {
+      const token = localStorage.getItem("token");
+  
+      const res = await fetch("http://localhost:3000/trip/recommendation/trip", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImlhdCI6MTc0NjU0OTM5MywiZXhwIjoxNzQ2NjM1NzkzfQ.580xtln5-5PJ3sJ5c_hU01TfatGhRDJw61F2_B5u-bo`,
+        },
+        body: JSON.stringify({
+          city: "서울특별시", // 예시: 실제로는 place.region -> '서울'이면 매핑 필요
+          activity_type: "실내",
+          activity_ids: [1, 3, 5],
+          emotion_ids: [2, 3],
+          preferredTransport: "대중교통",
+          companion: 2,
+          activity_level: 5,
+          place_name: place.title,
+          trip_duration: 3
+        })
+      });
+  
+      const result = await res.json();
+      if (res.ok) {
+        navigate("/plan", { state: { plan: result.data } });
+      } else {
+        toast({ title: result.message || "추천 실패", status: "error", duration: 3000 });
+      }
+  
+    } catch (err) {
+      toast({ title: "일정 추천 요청 실패", status: "error", duration: 3000 });
     }
   };
 
