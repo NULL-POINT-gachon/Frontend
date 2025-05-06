@@ -11,101 +11,94 @@ import {
   useToast,
   Spinner,
 } from "@chakra-ui/react";
+import { useLocation } from "react-router-dom";
+import { useTravel } from "../contexts/TravelContext";
 // import axios from "axios"; // 연동 시 활성화
-
-const dummyPlaces = [
-  {
-    id: "1",
-    title: "속초해수욕장",
-    description: "수영, 산책, 조개껍질 수집을 즐길 수 있는 유명한 해변입니다.",
-    image: "/images/sokcho-beach.jpg",
-    tags: ["힐링", "자연", "여유"],
-    region: "sokcho",
-  },
-  {
-    id: "2",
-    title: "안목해변",
-    description:"일출 명소이자 유명한 강릉 커피 거리에서 내려다보이는 긴 모래사장 해변입니다.",
-    image: "/images/anmok-beach.webp",
-    tags: ["감성", "바다", "맛집"],
-  },
-  {
-    id: "3",
-    title: "설악산 국립공원",
-    description:"폭포가 있는 대규모 산악 국립공원으로 다양한 동식물이 있으며 하이킹을 즐길 수 있습니다.",
-    image: "/images/seoraksan.jpg",
-    tags: ["여유", "자연", "힐링"],
-  },
-];
 
 function HotDestinationDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const toast = useToast();
+  const { travelData } = useTravel();
+  const { state }     = useLocation();
 
   const [place, setPlace] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchPlace = async () => {
-      try {
-        // 실제 백엔드 연동 시 사용:
-        // const res = await axios.get(`/api/hot-destinations/${id}`);
-        // setPlace(res.data);
+    if (state?.place) {
+      setPlace(state.place);
+      setLoading(false);
+      return;
+    }
 
-        const found = dummyPlaces.find((p) => p.id === id);
-        setPlace(found);
-      } catch (err) {
-        toast({
-          title: "장소 정보를 불러오지 못했습니다.",
-          status: "error",
-          duration: 3000,
-          isClosable: true,
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchPlace();
   }, [id, toast]);
 
+  const MOOD_MAP = {
+    설렘: 1, 힐링: 2, 감성: 3, 여유: 4,
+    활력: 5, 모험: 6, 로맨틱: 7, 재충전: 8
+  };
+
   const handleCreatePlan = async () => {
-    if (!place?.region) return;
-  
     try {
-      const token = localStorage.getItem("token");
+      /* ---------- 1. 필요 데이터 꺼내기 ---------- */
+      const { selectedCity, people, moods, tripDuration, preference } = travelData;
   
+      // 활동 ID 매핑 (예시)
+      const ACTIVITY_ID = {
+        "맛집 탐방": 1, "카페 투어": 3, "전시 관람": 5, "스파": 6, "쇼핑": 12,
+        등산: 7, "해변 산책": 8, 액티비티: 9, "유적지 탐방": 10, 테마파크: 11
+      };
+  
+      // 감정 ID는 이미 그대로 저장돼 있다고 가정 (빈 배열이면 1 기본)
+      const Mood_Map = {
+        설렘: 1, 힐링: 2, 감성: 3, 여유: 4,
+        활력: 5, 모험: 6, 로맨틱: 7, 재충전: 8
+      }
+  
+      /* ---------- 2. POST ---------- */
       const res = await fetch("http://localhost:3000/trip/recommendation/trip", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImlhdCI6MTc0NjU0OTM5MywiZXhwIjoxNzQ2NjM1NzkzfQ.580xtln5-5PJ3sJ5c_hU01TfatGhRDJw61F2_B5u-bo`,
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
         body: JSON.stringify({
-          city: "서울특별시", // 예시: 실제로는 place.region -> '서울'이면 매핑 필요
-          activity_type: "실내",
-          activity_ids: [1, 3, 5],
-          emotion_ids: [2, 3],
-          preferredTransport: "대중교통",
-          companion: 2,
-          activity_level: 5,
-          place_name: place.title,
-          trip_duration: 3
-        })
+          /* 백엔드 필드명 기준 -------- */
+          city:               selectedCity,
+          activity_type:      preference.type,                            // "실내" / "야외"
+          activity_ids:       [ACTIVITY_ID[preference.activity] || 1],    // 한 개만 예시
+          emotion_ids:        travelData.moods.map(m => MOOD_MAP[m]).filter(Boolean) || [1],
+          preferred_transport:  preference.transport,                       // 스펠링 주의
+          companion:   people || 1,
+          activity_level:     preference.intensity,
+          place_name:         place.title,
+          trip_duration:      tripDuration || 3
+        }),
       });
   
       const result = await res.json();
+  
       if (res.ok) {
         navigate("/plan", { state: { plan: result.data } });
       } else {
-        toast({ title: result.message || "추천 실패", status: "error", duration: 3000 });
+        toast({
+          title: result.message || "추천 실패",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
       }
-  
     } catch (err) {
-      toast({ title: "일정 추천 요청 실패", status: "error", duration: 3000 });
+      toast({
+        title: "일정 추천 요청 실패",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
     }
   };
+  
 
   if (loading) {
     return (
