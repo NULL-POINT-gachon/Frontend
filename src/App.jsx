@@ -91,14 +91,11 @@ function App() {
                   path="/mypage/delete"
                   element={<PrivateRoute><AccountDeletePage /></PrivateRoute>}
                 />
-                <Route
-                  path="/plan/:region"
-                  element={<PrivateRoute><PlanDetailPage /></PrivateRoute>}
-                />
               </Route>
 
               {/* 전체화면 라우트 */}
               <Route path="/plan" element={<PlanRecommendationPage />} />
+              <Route path="/plan/:region" element={<PrivateRoute><PlanDetailPage /></PrivateRoute>}/>
               <Route path="/final-recommendation-page" element={<FinalRecommendationPage />} />
 
               {/* 관리자 전용 라우트 */}
