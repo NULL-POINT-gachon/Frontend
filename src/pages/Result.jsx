@@ -10,64 +10,63 @@ import {
   import { useNavigate } from "react-router-dom";
   import { useEffect, useState } from "react";
   import RecommendationCard from "../components/RecommendationCard";
+  import { useAuth } from "../contexts/AuthContext";
+  import { useTravel } from "../contexts/TravelContext";
   import axios from "axios";
   
   function Result() {
+    const { token }   = useAuth();
+    const { travelData } = useTravel();   // dateRange, people, moods
+    const navigate = useNavigate();
+    const { setTravelData } = useTravel();
+
     const [recommendations, setRecommendations] = useState([]);
     const [loading, setLoading] = useState(true);
     const [selectedCity, setSelectedCity] = useState(null);
-    const navigate = useNavigate();
+
+    // ① 무드 → emotion_id 매핑표
+    const MOOD_MAP = {
+      설렘: 1, 힐링: 2, 감성: 3, 여유: 4,
+      활력: 5, 모험: 6, 로맨틱: 7, 재충전: 8
+    };
   
     useEffect(() => {
       const fetchRecommendations = async () => {
+        setLoading(true);
         try {
-          // 실제 백엔드 연동 시 교체
-          // const res = await axios.get("/api/recommendations");
-          // setRecommendations(res.data);
-  
-          // 현재는 더미 데이터 사용
-          const dummyData = [
-            {
-              title: "속초",
-              description: "대한민국 강원특별자치도 동해안 북부에 위치한 시이다.",
-              image: "/images/sokcho.png",
-              tags: ["감성", "힐링", "자연"],
-            },
-            {
-              title: "강릉",
-              description: "바다와 카페의 도시, 여유로운 동해 여행.",
-              image: "/images/gangneung.jpg",
-              tags: ["감성", "바다", "카페"],
-            },
-            {
-              title: "전주",
-              description: "한옥과 전통이 살아있는 감성 도시.",
-              image: "/images/jeonju.jpg",
-              tags: ["전통", "감성", "힐링"],
-            },
-          ];
-  
-          setTimeout(() => {
-            setRecommendations(dummyData);
-            setLoading(false);
-          }, 1000);
-        } catch (error) {
-          console.error("추천 결과 로딩 실패:", error);
+          const token = localStorage.getItem("token");
+    
+          const body = {
+            start_date:  travelData.dateRange[0],
+            end_date:    travelData.dateRange[1],
+            companions_count: travelData.people,
+            emotion_ids: travelData.moods.map(m => MOOD_MAP[m]).filter(Boolean)
+          };
+    
+          const res = await axios.post(
+            "http://localhost:3000/trip/recommendation/city",
+            body,
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+    
+          const list = res.data.data.recommendations || [];
+          setRecommendations(list);
+        } catch (err) {
+          console.error("추천 결과 로딩 실패:", err.response?.data || err);
+        } finally {
           setLoading(false);
         }
       };
-  
+    
       fetchRecommendations();
     }, []);
   
-    const handleNext = async () => {
-      try {
-        // 실제 선택 결과 전송
-        // await axios.post("/api/selected-city", { city: selectedCity });
-        navigate("/preference");
-      } catch (error) {
-        alert("도시 전송 실패");
-      }
+    
+    const handleNext = () => {
+      if (!selectedCity) return;
+
+      setTravelData(prev => ({ ...prev, selectedCity }));
+      navigate("/preference");
     };
   
     return (
@@ -91,11 +90,14 @@ import {
             <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
               {recommendations.map((rec, idx) => (
                 <RecommendationCard
-                  key={idx}
-                  {...rec}
-                  isSelected={selectedCity === rec.title}
-                  onClick={() => setSelectedCity(rec.title)}
-                />
+                key={idx}
+                title={rec.title}
+                description={rec.description}
+                image={rec.image}
+                tags={rec.tags}
+                isSelected={selectedCity === rec.title}
+                onClick={() => setSelectedCity(rec.title)}
+              />
               ))}
             </SimpleGrid>
   
