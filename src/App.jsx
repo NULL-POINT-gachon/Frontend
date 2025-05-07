@@ -29,6 +29,7 @@ import AdminNoticeEdit from "./components/admin/AdminNoticeEdit";
 import AdminNoticeDetail from "./components/admin/AdminNoticeDetail";
 import AdminQnaList from "./components/admin/AdminQnaList";
 import AdminQnaDetail from "./components/admin/AdminQnaDetail";
+import AdminUsers from "./components/admin/AdminUsers";
 
 import { TravelProvider } from "./contexts/TravelContext";
 import { AuthProvider } from "./contexts/AuthContext";
@@ -144,6 +145,7 @@ function App() {
                   <Route path="notices/:id" element={<AdminNoticeDetail />} />
                   <Route path="qna" element={<AdminQnaList />} />
                   <Route path="qna/:id" element={<AdminQnaDetail />} />
+                  <Route path="users" element={<AdminUsers />} />
                 </Route>
               </Route>
             </Routes>
