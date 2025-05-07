@@ -35,6 +35,7 @@ import AdminPlaceDetail from "./components/admin/places/AdminPlaceDetail";
 import AdminReviews from "./components/admin/AdminReviews";
 import AdminReviewDetail from "./components/admin/AdminReviewDetail";
 import AdminSchedules from "./components/admin/AdminSchedules";
+import AdminAIPage from "./components/admin/AdminAIPage";
 
 import { TravelProvider } from "./contexts/TravelContext";
 import { AuthProvider } from "./contexts/AuthContext";
@@ -60,85 +61,44 @@ function App() {
               <Route element={<Layout />}>
                 <Route
                   path="/survey/people"
-                  element={
-                    <PrivateRoute>
-                      <TravelInfoInput />
-                    </PrivateRoute>
-                  }
+                  element={<PrivateRoute><TravelInfoInput /></PrivateRoute>}
                 />
                 <Route
                   path="/start/mood"
-                  element={
-                    <PrivateRoute>
-                      <MoodInput />
-                    </PrivateRoute>
-                  }
+                  element={<PrivateRoute><MoodInput /></PrivateRoute>}
                 />
                 <Route
                   path="/summary"
-                  element={
-                    <PrivateRoute>
-                      <Summary />
-                    </PrivateRoute>
-                  }
+                  element={<PrivateRoute><Summary /></PrivateRoute>}
                 />
                 <Route
                   path="/result"
-                  element={
-                    <PrivateRoute>
-                      <Result />
-                    </PrivateRoute>
-                  }
+                  element={<PrivateRoute><Result /></PrivateRoute>}
                 />
                 <Route path="/preference" element={<PreferenceSurvey />} />
-                <Route
-                  path="/final-recommendation"
-                  element={<FinalRecommendation />}
-                />
-                <Route
-                  path="hot-destinations/:id"
-                  element={<HotDestinationDetail />}
-                />
+                <Route path="/final-recommendation" element={<FinalRecommendation />} />
+                <Route path="hot-destinations/:id" element={<HotDestinationDetail />} />
                 <Route
                   path="/mypage"
-                  element={
-                    <PrivateRoute>
-                      <MyPage />
-                    </PrivateRoute>
-                  }
+                  element={<PrivateRoute><MyPage /></PrivateRoute>}
                 />
                 <Route
                   path="/mypage/profile"
-                  element={
-                    <PrivateRoute>
-                      <ProfilePage />
-                    </PrivateRoute>
-                  }
+                  element={<PrivateRoute><ProfilePage /></PrivateRoute>}
                 />
                 <Route
                   path="/mypage/delete"
-                  element={
-                    <PrivateRoute>
-                      <AccountDeletePage />
-                    </PrivateRoute>
-                  }
+                  element={<PrivateRoute><AccountDeletePage /></PrivateRoute>}
                 />
                 <Route
                   path="/plan/:region"
-                  element={
-                    <PrivateRoute>
-                      <PlanDetailPage />
-                    </PrivateRoute>
-                  }
+                  element={<PrivateRoute><PlanDetailPage /></PrivateRoute>}
                 />
               </Route>
 
               {/* 전체화면 라우트 */}
               <Route path="/plan" element={<PlanRecommendationPage />} />
-              <Route
-                path="/final-recommendation-page"
-                element={<FinalRecommendationPage />}
-              />
+              <Route path="/final-recommendation-page" element={<FinalRecommendationPage />} />
 
               {/* 관리자 전용 라우트 */}
               <Route path="/admin" element={<AdminRoute />}>
@@ -156,6 +116,7 @@ function App() {
                   <Route path="reviews" element={<AdminReviews />} />
                   <Route path="reviews/:id" element={<AdminReviewDetail />} />
                   <Route path="schedules" element={<AdminSchedules />} />
+                  <Route path="ai" element={<AdminAIPage />} />
                 </Route>
               </Route>
             </Routes>
