@@ -6,10 +6,12 @@ import {
   SimpleGrid, Tabs, Tab, TabList, TabPanels, TabPanel
 } from "@chakra-ui/react";
 import { AddIcon, DeleteIcon } from "@chakra-ui/icons";
+import MapPreview from "../components/MapPreview";
 import { useLocation, useNavigate } from "react-router-dom";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
+import { useAuth } from "../contexts/AuthContext";
 import Header from "../components/Header";
-// import axios from "axios"; // 백엔드 연동 시 주석 해제
+import axios from "axios"; // 백엔드 연동 시 주석 해제
 
 const dummyPlaces = [
   { title: "속초해수욕장", tags: ["숙박"], defaultTime: "14:00", image: "/images/sokcho-beach.jpg" },
@@ -33,6 +35,7 @@ const PlanRecommendationPage = () => {
   const [selectedTime, setSelectedTime] = useState("12:00");
   const [selectedTransport, setSelectedTransport] = useState("도보");
   const [shareTarget, setShareTarget] = useState("");
+  const { token } = useAuth();
 
   useEffect(() => {
     const fetchPlaces = async () => {
@@ -89,11 +92,39 @@ const PlanRecommendationPage = () => {
 
   const optimizeRoute = async () => {
     try {
-      // const res = await axios.post("/api/optimize-route", plan);
-      // navigate("/optimized-route", { state: { optimized: res.data } });
-      navigate("/final-recommendation-page", { state: { plan } });
-    } catch {
-      toast({ title: "최적 동선 분석 실패", status: "error", duration: 2000 });
+      const tripId = location.state.tripId;            // ← 일정 생성 후 받아 둔 값
+  
+      const { data } = await axios.post(
+        `http://localhost:3000/trip/${tripId}/route`,
+        { ...plan, transportMode: "DRIVING" },         // body → optimizeRequestDto
+        { headers: { Authorization: `Bearer ${token}` }}
+      );
+  
+      /*
+        data 구조:
+        {
+          days: [
+            {
+              day: 1,
+              items: [
+                { title, time, tags, image, order, lat, lng, … },
+                …
+              ],
+              totalDistance,
+              totalDuration
+            },
+            …
+          ],
+          totalDistance,
+          totalDuration
+        }
+      */
+  
+      setPlan({ days: data.days });     // ★ 여기서 days[*].items[*].lat/lng 확보
+      toast({ title: "최적 경로 계산 완료!", status: "success" });
+    } catch (err) {
+      console.error(err);
+      toast({ title: "최적 동선 분석 실패", status: "error" });
     }
   };
 
@@ -186,11 +217,15 @@ const PlanRecommendationPage = () => {
           </Button>
         </Box>
 
-        <Box flex="1" bg="gray.100" p={6}>
-          <Box bg="white" p={6} borderRadius="md" boxShadow="md">
-            <Text fontSize="lg" fontWeight="semibold">📍 추후 지도 연동 예정</Text>
-            <Text color="gray.600">Google Maps 또는 Kakao Maps 연동 가능합니다.</Text>
-          </Box>
+        <Box flex="1" bg="gray.100" p={0}>
+          {/* 👉 선택된 일차에 좌표가 있으면 지도 표시, 없으면 안내 문구 */}
+          {plan.days[selectedDayIndex]?.items?.[0]?.lat ? (
+            <MapPreview items={plan.days[selectedDayIndex].items} height="calc(100vh - 120px)" />
+          ) : (
+            <Box h="100%" display="flex" alignItems="center" justifyContent="center">
+              <Text color="gray.500">지도 데이터가 없습니다. <br/>오른쪽 상단 “🚗 최적 동선 보기”로 먼저 경로를 계산하세요.</Text>
+            </Box>
+          )}
         </Box>
       </Flex>
 
