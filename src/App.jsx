@@ -19,6 +19,9 @@ import PlanRecommendationPage from "./pages/PlanRecommendationPage";
 import FinalRecommendationPage from "./pages/FinalRecommendationPage";
 import PlanDetailPage from "./pages/PlanDetailPage";
 import AdminLoginPage from "./pages/AdminLoginPage";
+import AdminDashboard from "./components/admin/AdminDashboard";
+import AdminHome from "./components/admin/AdminHome";
+import AdminRoute from "./components/admin/AdminRoute";
 
 import { TravelProvider } from "./contexts/TravelContext";
 import { AuthProvider } from "./contexts/AuthContext";
@@ -34,11 +37,13 @@ function App() {
         <AdminAuthProvider>
           <TravelProvider>
             <Routes>
+              {/* 공개 라우트 */}
               <Route path="/" element={<HomePage />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/signup" element={<SignUpPage />} />
               <Route path="/admin/login" element={<AdminLoginPage />} />
 
+              {/* 공통 레이아웃 적용 라우트 */}
               <Route element={<Layout />}>
                 <Route
                   path="/survey/people"
@@ -115,12 +120,19 @@ function App() {
                 />
               </Route>
 
-              {/* 레이아웃 없이 넓게 써야 하는 페이지 */}
+              {/* 전체 화면 사용 (Layout 없이) */}
               <Route path="/plan" element={<PlanRecommendationPage />} />
               <Route
                 path="/final-recommendation-page"
                 element={<FinalRecommendationPage />}
               />
+
+              {/* 관리자 전용 라우트 */}
+              <Route path="/admin" element={<AdminRoute />}>
+                <Route element={<AdminDashboard />}>
+                  <Route index element={<AdminHome />} />
+                </Route>
+              </Route>
             </Routes>
           </TravelProvider>
         </AdminAuthProvider>
