@@ -82,6 +82,32 @@ export function AuthProvider({ children }) {
     return !!localStorage.getItem("token");
   };
 
+  // 구글 로그인 후 추가 정보 저장
+const completeProfile = async (profileData) => {
+  try {
+    const response = await axios.post("http://localhost:3000/user/complete-profile", profileData);
+    
+    if (response.data.success) {
+      const userName = response.data.data?.user?.name || "";
+      const authToken = response.data.data?.token || "";
+      
+      // 저장 성공 시 로그인 처리
+      login(userName, authToken);
+      return { success: true };
+    } else {
+      throw new Error(response.data.message || "프로필 저장 실패");
+    }
+  } catch (error) {
+    console.error("프로필 완성 오류:", error);
+    return { 
+      success: false, 
+      error: error.response?.data?.message || "프로필 저장 중 오류가 발생했습니다" 
+    };
+  }
+};
+
+
+
   return (
     <AuthContext.Provider value={{ 
       isLoggedIn, 
@@ -91,7 +117,8 @@ export function AuthProvider({ children }) {
       logout, 
       loginWithCredentials,
       getToken,
-      checkToken
+      checkToken ,
+      completeProfile
     }}>
       {children}
     </AuthContext.Provider>

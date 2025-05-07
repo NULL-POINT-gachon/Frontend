@@ -16,14 +16,56 @@ import { SearchIcon } from "@chakra-ui/icons";
 
 import Header from "../components/Header";
 import DateFilterDropdown from "../components/DateFilterDropdown";
-import { useNavigate } from "react-router-dom";
+import { useNavigate , useLocation } from "react-router-dom";
 import { useTravel } from "../contexts/TravelContext"; // 다시 추가
+import { useEffect } from "react";
+import { useAuth } from "../contexts/AuthContext";
+import axios from "axios";
 
 function HomePage() {
+  const location = useLocation();
   const navigate = useNavigate();
-  const { travelData } = useTravel(); // 복구 완료
+  const { login, isLoggedIn } = useAuth();  const { travelData } = useTravel(); // 복구 완료
   const dateRange = travelData.dateRange || [null, null];
-
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const token = params.get('token');
+    
+    if (token && !isLoggedIn) {
+      console.log("토큰 감지: 로그인 처리 시작");
+      
+      // 1. 먼저 localStorage에 토큰 저장
+      localStorage.setItem("token", token);
+      
+      // 2. axios 기본 헤더 설정
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      
+      // 3. 사용자 정보 가져오기
+      axios.get('http://localhost:3000/user/profile')
+        .then(response => {
+          if (response.data.success) {
+            const userName = response.data.data.name;
+            console.log("사용자 정보 로드 성공:", userName);
+            
+            // 4. 로그인 처리
+            login(userName, token);
+            
+            // 5. URL에서 토큰 제거 (주소창 정리)
+            navigate('/', { replace: true });
+            
+            // 6. 페이지 새로고침 (상태 완전 적용)
+            window.location.reload();
+          }
+        })
+        .catch(error => {
+          console.error("사용자 정보 로드 실패:", error);
+          // 실패 시 토큰 제거
+          localStorage.removeItem("token");
+          delete axios.defaults.headers.common['Authorization'];
+        });
+    }
+  }, [location, navigate, login, isLoggedIn]);
+  
   const handleSearch = () => {
     if (!dateRange[0] || !dateRange[1]) {
       alert("체크인과 체크아웃 날짜를 모두 선택해주세요!");

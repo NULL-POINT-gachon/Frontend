@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import InfoRow from "../components/mypage/InfoRow";
 import EditableInfoRow from "../components/mypage/EditableInfoRow";
-import Header from "../components/Header";
+// import Header from "../components/Header";
 import {
   Box,
   Flex,
@@ -214,7 +214,7 @@ const ProfilePage = () => {
 
   return (
     <Box bg="white.50" minH="100vh">
-      <Header />
+      {/* <Header /> */}
 
       {/* 배너 */}
       <Box bgGradient="linear(to-b, blue.200, white)" py={10} textAlign="center" mb={4}>

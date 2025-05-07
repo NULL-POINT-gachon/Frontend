@@ -49,8 +49,8 @@ function LoginPage() {
   };
 
   const handleGoogleLogin = () => {
-    console.log("⚠️ Google 로그인 API 연동 예정");
-    alert('구글 로그인 기능은 추후 지원됩니다!');
+    window.location.href = "http://localhost:3000/user/google";
+
   };
 
   return (
