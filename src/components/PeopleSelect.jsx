@@ -3,10 +3,10 @@ import { Box, Text, SimpleGrid, useRadioGroup } from "@chakra-ui/react";
 import SelectableCard from "./SelectableCard";
 
 const peopleOptions = [
-  { label: "혼자", value: "1인" },
-  { label: "2인", value: "2인" },
-  { label: "3~4인", value: "3~4인" },
-  { label: "5인 이상", value: "5인 이상" },
+  { label: "혼자", value: 1 },
+  { label: "2인", value: 2 },
+  { label: "3~4인", value: 3},
+  { label: "5인 이상", value: 5 },
 ];
 
 function PeopleSelect({ value, onChange }) {
