@@ -17,127 +17,112 @@ import FinalRecommendation from "./pages/FinalRecommendation";
 import HotDestinationDetail from "./pages/HotDestinationDetail";
 import PlanRecommendationPage from "./pages/PlanRecommendationPage";
 import FinalRecommendationPage from "./pages/FinalRecommendationPage";
-
-import PlanDetailPage from "./pages/PlanDetailPage"; 
-
-
+import PlanDetailPage from "./pages/PlanDetailPage";
 import AdminLoginPage from "./pages/AdminLoginPage";
-
 
 import { TravelProvider } from "./contexts/TravelContext";
 import { AuthProvider } from "./contexts/AuthContext";
+import { AdminAuthProvider } from "./contexts/AdminAuthContext";
 
 import PrivateRoute from "./components/PrivateRoute";
 import Layout from "./components/Layout";
-import { AdminAuthProvider } from "./contexts/AdminAuthContext";
 
 function App() {
   return (
     <ChakraProvider>
       <AuthProvider>
         <AdminAuthProvider>
-        <TravelProvider>
-          <Routes>
+          <TravelProvider>
+            <Routes>
               <Route path="/" element={<HomePage />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/signup" element={<SignUpPage />} />
+              <Route path="/admin/login" element={<AdminLoginPage />} />
+
               <Route element={<Layout />}>
+                <Route
+                  path="/survey/people"
+                  element={
+                    <PrivateRoute>
+                      <TravelInfoInput />
+                    </PrivateRoute>
+                  }
+                />
+                <Route
+                  path="/start/mood"
+                  element={
+                    <PrivateRoute>
+                      <MoodInput />
+                    </PrivateRoute>
+                  }
+                />
+                <Route
+                  path="/summary"
+                  element={
+                    <PrivateRoute>
+                      <Summary />
+                    </PrivateRoute>
+                  }
+                />
+                <Route
+                  path="/result"
+                  element={
+                    <PrivateRoute>
+                      <Result />
+                    </PrivateRoute>
+                  }
+                />
+                <Route path="/preference" element={<PreferenceSurvey />} />
+                <Route
+                  path="/final-recommendation"
+                  element={<FinalRecommendation />}
+                />
+                <Route
+                  path="hot-destinations/:id"
+                  element={<HotDestinationDetail />}
+                />
+                <Route
+                  path="/mypage"
+                  element={
+                    <PrivateRoute>
+                      <MyPage />
+                    </PrivateRoute>
+                  }
+                />
+                <Route
+                  path="/mypage/profile"
+                  element={
+                    <PrivateRoute>
+                      <ProfilePage />
+                    </PrivateRoute>
+                  }
+                />
+                <Route
+                  path="/mypage/delete"
+                  element={
+                    <PrivateRoute>
+                      <AccountDeletePage />
+                    </PrivateRoute>
+                  }
+                />
+                <Route
+                  path="/plan/:region"
+                  element={
+                    <PrivateRoute>
+                      <PlanDetailPage />
+                    </PrivateRoute>
+                  }
+                />
+              </Route>
+
+              {/* 레이아웃 없이 넓게 써야 하는 페이지 */}
+              <Route path="/plan" element={<PlanRecommendationPage />} />
               <Route
-                path="/survey/people"
-                element={
-                  <PrivateRoute>
-                    <TravelInfoInput />
-                  </PrivateRoute>
-                }
+                path="/final-recommendation-page"
+                element={<FinalRecommendationPage />}
               />
-              <Route
-                path="/start/mood"
-                element={
-                  <PrivateRoute>
-                    <MoodInput />
-                  </PrivateRoute>
-                }
-              />
-              <Route
-                path="/summary"
-                element={
-                  <PrivateRoute>
-                    <Summary />
-                  </PrivateRoute>
-                }
-              />
-
-              <Route
-                path="/result"
-                element={
-                  <PrivateRoute>
-                    <Result />
-                  </PrivateRoute>
-                }
-              />
-
-              <Route
-              path="/preference"
-              element={
-                <PreferenceSurvey/>
-              }
-              />
-
-              <Route
-              path="/final-recommendation"
-              element={
-                <FinalRecommendation/>
-              }
-              />
-
-              <Route
-              path="hot-destinations/:id"
-              element={
-                <HotDestinationDetail/>
-              }
-              />
-
-
-
-    
-            </Route>
-
-            {/* 레이아웃 없이 넓게 써야 하는 페이지는 Layout 밖에 배치 */}
-            <Route path="/plan" element={<PlanRecommendationPage />} />
-            <Route path="/final-recommendation-page" element={<FinalRecommendationPage />} />
-            <Route
-                path="/mypage"
-                element={
-                  <PrivateRoute>
-                    <MyPage />
-                  </PrivateRoute>
-                }
-              />
-
-<Route path="/mypage/profile" element={<PrivateRoute><ProfilePage /> </PrivateRoute>}/>
-              <Route
-                path="/mypage/delete"
-                element={
-                  <PrivateRoute>
-                    <AccountDeletePage />
-                  </PrivateRoute>
-                }
-              />
-
-              
-<Route
-  path="/plan/:region"
-  element={
-    <PrivateRoute>
-      <PlanDetailPage />
-    </PrivateRoute>
-  }
-/>
-<Route path="/admin/login" element={<AdminLoginPage />} />
-
-          </Routes>
-          
-        </TravelProvider>
+            </Routes>
+          </TravelProvider>
         </AdminAuthProvider>
       </AuthProvider>
     </ChakraProvider>

@@ -16,19 +16,54 @@ import {
   Spinner,
 } from "@chakra-ui/react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
+import { useTravel } from "../contexts/TravelContext";
 import axios from "axios";
+import { useToast } from "@chakra-ui/react";
+import { useEffect } from "react";
+
 
 function PreferenceSurvey() {
+  const { token } = useAuth();
+  const { travelData, setTravelData } = useTravel();
+  const toast = useToast();
+
+  useEffect(() => {
+    console.log("moods in PreferenceSurvey:", travelData.moods);
+  }, []);
+
   const [formData, setFormData] = useState({
     type: "",
     activity: "",
     transport: "",
     intensity: 1,
-    interests: [], // 누락되어 있던 interests 초기화
+    interests: [], // 누락되지 않도록 유지
   });
 
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+
+  /** 내부 선택 → AI 파라미터 매핑 */
+  const ACTIVITY_ID = {
+    "맛집 탐방": 1, "카페 투어": 3, "전시 관람": 5, "스파": 6, "쇼핑": 12,
+    등산: 7, "해변 산책": 8, 액티비티: 9, "유적지 탐방": 10, 테마파크: 11
+  };
+
+  const MOOD_MAP = {
+    설렘: 1, 힐링: 2, 감성: 3, 여유: 4,
+    활력: 5, 모험: 6, 로맨틱: 7, 재충전: 8
+  };
+  
+  const buildRequestBody = () => ({
+    city: travelData.selectedCity || "서울특별시",
+    activity_type: formData.type,                         // 실내/야외
+    activity_ids:  [ACTIVITY_ID[formData.activity] || 1],
+    emotion_ids:   travelData.moods.map(m => MOOD_MAP[m]).filter(Boolean) || [1],
+    preffer_transport: formData.transport,
+    companion:  travelData.people || 1,
+    activity_level:    formData.intensity
+  });
+  
 
   const handleInterestToggle = (item) => {
     setFormData((prev) => {
@@ -49,21 +84,20 @@ function PreferenceSurvey() {
     formData.intensity > 0;
 
   const handleSubmit = async () => {
+    if (!isValid) return;
+    setLoading(true);
     try {
-      setLoading(true);
+      setTravelData(prev => ({ ...prev, preference: formData }));
+      const res = await axios.post(
+        "http://localhost:3000/trip/recommendation/preferences",
+        buildRequestBody(),
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
 
-      await axios.post("/api/survey-detail", formData, {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-
-      navigate("/final-recommendation");
+      // 성공 시 추천 place 목록을 다음 페이지로 넘김
+      navigate("/final-recommendation", { state: { places: res.data.data } });
     } catch (err) {
-      console.warn("서버 없음 - 다음 페이지로 강제 이동");
-
-      // 백엔드 없으므로 에러 무시하고 이동
-      navigate("/final-recommendation");
+      toast({ title:"추천 실패", status:"error", duration:3000 });
     } finally {
       setLoading(false);
     }
@@ -133,9 +167,9 @@ function PreferenceSurvey() {
             onChange={(val) => setFormData({ ...formData, transport: val })}
           >
             <Stack direction="row" spacing={5}>
-              <Radio value="자동차">자동차</Radio>
-              <Radio value="기차">기차</Radio>
-              <Radio value="버스">버스</Radio>
+              <Radio value="자가용">자동차</Radio>
+              <Radio value="대중교통">대중교통</Radio>
+              <Radio value="도보">도보</Radio>
             </Stack>
           </RadioGroup>
         </Box>
