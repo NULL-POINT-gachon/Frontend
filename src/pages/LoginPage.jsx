@@ -4,7 +4,7 @@ import { useState } from 'react';
 import {
   Box, Input, Button, Text, VStack, Checkbox,
   InputGroup, InputRightElement, IconButton,
-  Divider, Flex
+  Divider, Flex, Spinner
 } from '@chakra-ui/react';
 import { ViewIcon, ViewOffIcon } from '@chakra-ui/icons';
 import { FcGoogle } from 'react-icons/fc';
@@ -15,25 +15,37 @@ function LoginPage() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { loginWithCredentials } = useAuth();
 
-  const handleLogin = (e) => {
-
-    e.preventDefault(); // 폼 제출 기본 동작 방지
-
+  const handleLogin = async (e) => {
+    e.preventDefault();
     setError('');
+    setIsLoading(true);
 
     if (!loginId.trim() || !password.trim()) {
       setError('아이디와 비밀번호를 입력하세요.');
+      setIsLoading(false);
       return;
     }
 
-    // 추후 백엔드 연동 예정
-    console.log("입력 ID:", loginId);
-    console.log("입력 PW:", password);
-    login(loginId);
-    navigate("/", { replace: true });
+    try {
+      // 백엔드 API로 로그인 요청
+      const result = await loginWithCredentials(loginId, password);
+      
+      if (result.success) {
+        console.log("로그인 성공!");
+        navigate("/", { replace: true });
+      } else {
+        setError(result.error || '로그인에 실패했습니다. 다시 시도해주세요.');
+      }
+    } catch (error) {
+      console.error("로그인 처리 중 오류:", error);
+      setError('로그인 처리 중 오류가 발생했습니다.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleGoogleLogin = () => {
@@ -48,12 +60,13 @@ function LoginPage() {
           <VStack spacing={4} align="stretch">
             <Text fontSize="xl" fontWeight="bold" textAlign="center">로그인</Text>
 
-            <Text fontSize="sm">아이디</Text>
+            <Text fontSize="sm">이메일</Text>
             <Input 
-              placeholder="아이디 입력" 
+              placeholder="이메일 입력" 
               value={loginId} 
               onChange={(e) => setLoginId(e.target.value)}
               borderColor={error ? 'red.300' : 'gray.300'}
+              type="email"
             />
 
             <Text fontSize="sm">비밀번호</Text>
@@ -79,7 +92,13 @@ function LoginPage() {
 
             <Checkbox>자동 로그인</Checkbox>
 
-            <Button type="submit" colorScheme="blue" w="full">
+            <Button 
+              type="submit" 
+              colorScheme="blue" 
+              w="full"
+              isLoading={isLoading}
+              loadingText="로그인 중..."
+            >
               로그인
             </Button>
 

@@ -10,10 +10,12 @@ import {
   } from "@chakra-ui/react";
   import { useNavigate } from "react-router-dom";
   import { useEffect, useState } from "react";
+  import { useLocation } from "react-router-dom";
   import RecommendationCard from "../components/RecommendationCard";
   // import axios from "axios"; // 백엔드 연동 시 다시 주석 해제
   
   function FinalRecommendation() {
+    const { state } = useLocation();
     const [places, setPlaces] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
@@ -21,54 +23,11 @@ import {
     const toast = useToast();
   
     useEffect(() => {
-      const fetchPlaces = async () => {
-        try {
-          // 백엔드 연동 전: 더미 데이터 사용
-          const dummyData = [
-            {
-              id: 1,
-              title: "속초해수욕장",
-              description:
-                "수영, 산책, 조개껍질 수집을 즐길 수 있는 유명한 해변으로 뒤편에 소나무, 리조트, 식당이 늘어서 있습니다.",
-              image: "/images/sokcho-beach.jpg",
-              tags: ["힐링", "자연", "여유"],
-            },
-            {
-              id: 2,
-              title: "안목해변",
-              description:
-                "일출 명소이자 유명한 강릉 커피 거리에서 내려다보이는 긴 모래사장 해변입니다.",
-              image: "/images/anmok-beach.webp",
-              tags: ["감성", "바다", "맛집"],
-            },
-            {
-              id: 3,
-              title: "설악산 국립공원",
-              description:
-                "폭포가 있는 대규모 산악 국립공원으로 다양한 동식물이 있으며 하이킹을 즐길 수 있습니다.",
-              image: "/images/seoraksan.jpg",
-              tags: ["여유", "자연", "힐링"],
-            },
-          ];
-  
-          setPlaces(dummyData);
-  
-          // 백엔드 연동 시 아래 코드로 교체
-          /*
-          const res = await axios.get("/api/final-recommendation");
-          setPlaces(res.data);
-          */
-        } catch (err) {
-          console.error("AI 분석 실패:", err);
-          setError("AI 분석 결과를 불러오지 못했습니다.");
-          setPlaces([]);
-        } finally {
-          setLoading(false);
-        }
-      };
-  
-      fetchPlaces();
-    }, []);
+      if (state?.places) {
+        setPlaces(state.places);
+        setLoading(false);
+        return;
+      }}, []);
   
     const handleRetry = () => {
       navigate("/preference");
@@ -117,7 +76,7 @@ import {
                   description={place.description}
                   image={place.image}
                   tags={place.tags}
-                  onClick={() => navigate(`/hot-destinations/${place.id}`)}
+                  onClick={() => navigate(`/hot-destinations/${place.id}`, { state: { place } })}
                 />
               ))}
             </SimpleGrid>
