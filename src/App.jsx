@@ -19,6 +19,7 @@ import PlanRecommendationPage from "./pages/PlanRecommendationPage";
 import FinalRecommendationPage from "./pages/FinalRecommendationPage";
 import PlanDetailPage from "./pages/PlanDetailPage";
 import AdminLoginPage from "./pages/AdminLoginPage";
+import MyPlanPage from "./pages/MyPlanPage";
 
 import AdminDashboard from "./components/admin/AdminDashboard";
 import AdminHome from "./components/admin/AdminHome";
@@ -97,6 +98,10 @@ function App() {
               <Route path="/plan" element={<PlanRecommendationPage />} />
               <Route path="/plan/:region" element={<PrivateRoute><PlanDetailPage /></PrivateRoute>}/>
               <Route path="/final-recommendation-page" element={<FinalRecommendationPage />} />
+              <Route
+                path="/my-plan"
+                element={<PrivateRoute><MyPlanPage /></PrivateRoute>}
+/>
 
               {/* 관리자 전용 라우트 */}
               <Route path="/admin" element={<AdminRoute />}>
