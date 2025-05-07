@@ -19,6 +19,7 @@ import PlanRecommendationPage from "./pages/PlanRecommendationPage";
 import FinalRecommendationPage from "./pages/FinalRecommendationPage";
 import PlanDetailPage from "./pages/PlanDetailPage";
 import AdminLoginPage from "./pages/AdminLoginPage";
+
 import AdminDashboard from "./components/admin/AdminDashboard";
 import AdminHome from "./components/admin/AdminHome";
 import AdminRoute from "./components/admin/AdminRoute";
@@ -26,6 +27,8 @@ import AdminNoticeList from "./components/admin/AdminNoticeList";
 import AdminNoticeCreate from "./components/admin/AdminNoticeCreate";
 import AdminNoticeEdit from "./components/admin/AdminNoticeEdit";
 import AdminNoticeDetail from "./components/admin/AdminNoticeDetail";
+import AdminQnaList from "./components/admin/AdminQnaList";
+import AdminQnaDetail from "./components/admin/AdminQnaDetail";
 
 import { TravelProvider } from "./contexts/TravelContext";
 import { AuthProvider } from "./contexts/AuthContext";
@@ -124,7 +127,7 @@ function App() {
                 />
               </Route>
 
-              {/* 전체 화면 사용 (Layout 없이) */}
+              {/* 전체화면 라우트 */}
               <Route path="/plan" element={<PlanRecommendationPage />} />
               <Route
                 path="/final-recommendation-page"
@@ -139,6 +142,8 @@ function App() {
                   <Route path="notices/new" element={<AdminNoticeCreate />} />
                   <Route path="notices/:id/edit" element={<AdminNoticeEdit />} />
                   <Route path="notices/:id" element={<AdminNoticeDetail />} />
+                  <Route path="qna" element={<AdminQnaList />} />
+                  <Route path="qna/:id" element={<AdminQnaDetail />} />
                 </Route>
               </Route>
             </Routes>

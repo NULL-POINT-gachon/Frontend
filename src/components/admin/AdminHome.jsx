@@ -13,6 +13,7 @@ import {
   Tooltip, ResponsiveContainer, XAxis, YAxis, Legend
 } from "recharts";
 import { useNavigate } from "react-router-dom";
+import { dummyQnaList } from "./dummyQna"; // 실제 위치에 맞게 경로 조정
 
 const COLORS = ["#3182CE", "#38B2AC", "#DD6B20", "#805AD5"];
 
@@ -159,16 +160,53 @@ const AdminHome = () => {
 
         {/* QnA */}
         <Card>
-          <CardHeader>
-            <Heading size="sm">Q&A 문의</Heading>
-          </CardHeader>
-          <CardBody>
-            <Text fontSize="sm" mb={2}>총 문의: {qnaList.length}건</Text>
-            <Text fontSize="sm" color="red.500">
-              미답변: {qnaList.filter((q) => !q.answered).length}건
-            </Text>
-          </CardBody>
-        </Card>
+  <CardHeader
+    display="flex"
+    alignItems="center"
+    justifyContent="space-between"
+  >
+    <HStack
+      cursor="pointer"
+      onClick={() => navigate("/admin/qna")}
+      _hover={{ textDecoration: "underline", color: "teal.600" }}
+    >
+      <MessageSquareIcon size={18} />
+      <Heading size="sm">Q&A 문의</Heading>
+    </HStack>
+    <Text fontSize="xs" color="gray.400">(전체 보기)</Text>
+  </CardHeader>
+
+  <CardBody>
+    <VStack align="start" spacing={3}>
+      <HStack fontSize="sm">
+        <Text>총 문의:</Text>
+        <Text fontWeight="bold">{dummyQnaList.length}건</Text>
+        <Text ml={4}>미답변:</Text>
+        <Text fontWeight="bold" color="red.500">
+          {dummyQnaList.filter((q) => !q.answered).length}건
+        </Text>
+      </HStack>
+
+      {/* 최근 문의 하나 표시 */}
+      {dummyQnaList
+        .filter((q) => !q.answered)
+        .slice(0, 1)
+        .map((qna) => (
+          <Box
+            key={qna.id}
+            p={2}
+            cursor="pointer"
+            borderRadius="md"
+            _hover={{ bg: "gray.50" }}
+            onClick={() => navigate(`/admin/qna/${qna.id}`)}
+          >
+            <Text fontSize="sm" fontWeight="medium">{qna.question}</Text>
+            <Text fontSize="xs" color="gray.500">{qna.date}</Text>
+          </Box>
+        ))}
+    </VStack>
+  </CardBody>
+</Card>
       </SimpleGrid>
 
       {/* 하단 차트 */}
