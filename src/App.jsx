@@ -27,6 +27,8 @@ import MyPlanPage from "./pages/MyPlanPage";
 import NotificationsPage from "./pages/NotificationsPage";
 import HotDestinationDetail from "./pages/HotDestinationDetail";
 
+import InviteResponsePage from "./pages/InviteResponsePage";
+
 import AdminDashboard from "./components/admin/AdminDashboard";
 import AdminHome from "./components/admin/AdminHome";
 import AdminRoute from "./components/admin/AdminRoute";
@@ -143,6 +145,8 @@ function App() {
                   element={<PrivateRoute><AccountDeletePage /></PrivateRoute>}
                 />
                 <Route path="/notifications" element={<NotificationsPage />} />
+                
+                <Route path="/invite/:shareId" element={<InviteResponsePage />} />
              
 
               {/* 관리자 전용 라우트 */}
