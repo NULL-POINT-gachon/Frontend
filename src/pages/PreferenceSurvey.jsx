@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Heading,
@@ -14,36 +14,29 @@ import {
   SliderFilledTrack,
   SliderThumb,
   Spinner,
+  useToast,
 } from "@chakra-ui/react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { useTravel } from "../contexts/TravelContext";
 import axios from "axios";
-import { useToast } from "@chakra-ui/react";
-import { useEffect } from "react";
-
 
 function PreferenceSurvey() {
   const { token } = useAuth();
   const { travelData, setTravelData } = useTravel();
   const toast = useToast();
-
-  useEffect(() => {
-    console.log("moods in PreferenceSurvey:", travelData.moods);
-  }, []);
+  const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
     type: "",
     activity: "",
     transport: "",
     intensity: 1,
-    interests: [], // 누락되지 않도록 유지
+    interests: [],
   });
 
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
 
-  /** 내부 선택 → AI 파라미터 매핑 */
   const ACTIVITY_ID = {
     "맛집 탐방": 1, "카페 투어": 3, "전시 관람": 5, "스파": 6, "쇼핑": 12,
     등산: 7, "해변 산책": 8, 액티비티: 9, "유적지 탐방": 10, 테마파크: 11
@@ -53,28 +46,46 @@ function PreferenceSurvey() {
     설렘: 1, 힐링: 2, 감성: 3, 여유: 4,
     활력: 5, 모험: 6, 로맨틱: 7, 재충전: 8
   };
-  
-  const buildRequestBody = () => ({
-    city: travelData.selectedCity || "서울특별시",
-    activity_type: formData.type,                         // 실내/야외
-    activity_ids:  [ACTIVITY_ID[formData.activity] || 1],
-    emotion_ids:   travelData.moods.map(m => MOOD_MAP[m]).filter(Boolean) || [1],
-    preffer_transport: formData.transport,
-    companion:  travelData.people || 1,
-    activity_level:    formData.intensity
-  });
-  
 
-  const handleInterestToggle = (item) => {
-    setFormData((prev) => {
-      const exists = prev.interests.includes(item);
-      return {
-        ...prev,
-        interests: exists
-          ? prev.interests.filter((i) => i !== item)
-          : [...prev.interests, item],
-      };
-    });
+  useEffect(() => {
+    console.log("moods in PreferenceSurvey:", travelData.moods);
+  }, []);
+
+  const buildRequestBody = () => {
+    const rawMoods = Array.isArray(travelData.moods)
+      ? travelData.moods
+      : travelData.moods
+        ? [travelData.moods]
+        : [];
+
+    const emotion_ids = rawMoods
+      .map((m) => MOOD_MAP[m])
+      .filter((id) => typeof id === "number");
+
+      const activityName = formData.activity?.trim();
+console.log("🔍 activityName:", activityName);
+console.log("🔍 ACTIVITY_ID keys:", Object.keys(ACTIVITY_ID));
+const activity_id = ACTIVITY_ID[activityName];
+console.log("✅ activity_id:", activity_id);
+
+
+    const payload = {
+      city: "서울특별시",  // ✅ 테스트용 하드코딩
+      activity_type: formData.type,
+      activity_ids: Number.isInteger(activity_id) ? [activity_id] : [],
+      emotion_ids: emotion_ids.length ? emotion_ids : [],
+      preferred_transport: formData.transport,
+      companion: travelData.people || 1,
+      activity_level: formData.intensity,
+    };
+
+    console.log("✅ 선택된 감정들:", rawMoods);
+    console.log("✅ emotion_ids:", emotion_ids);
+    console.log("✅ formData.activity:", formData.activity);
+    console.log("✅ activity_id:", activity_id);
+    console.log("🚀 최종 전송 데이터:", payload);
+
+    return payload;
   };
 
   const isValid =
@@ -86,18 +97,19 @@ function PreferenceSurvey() {
   const handleSubmit = async () => {
     if (!isValid) return;
     setLoading(true);
+    const requestData = buildRequestBody();
+
     try {
       setTravelData(prev => ({ ...prev, preference: formData }));
       const res = await axios.post(
         "http://localhost:3000/trip/recommendation/preferences",
-        buildRequestBody(),
+        requestData,
         { headers: { Authorization: `Bearer ${token}` } }
       );
-
-      // 성공 시 추천 place 목록을 다음 페이지로 넘김
       navigate("/final-recommendation", { state: { places: res.data.data } });
     } catch (err) {
-      toast({ title:"추천 실패", status:"error", duration:3000 });
+      console.error("서버 응답 에러:", err.response?.data || err.message);
+      toast({ title: "추천 실패", status: "error", duration: 3000 });
     } finally {
       setLoading(false);
     }
@@ -105,19 +117,10 @@ function PreferenceSurvey() {
 
   return (
     <Box bgGradient="linear(to-b, blue.50, white)" minH="100vh" py={10}>
-      <Box
-        maxW="800px"
-        mx="auto"
-        p={8}
-        bg="white"
-        borderRadius="2xl"
-        boxShadow="2xl"
-      >
-        <Heading size="lg" mb={6} textAlign="center">
-          ✨ 여행 취향 상세 설문
-        </Heading>
+      <Box maxW="800px" mx="auto" p={8} bg="white" borderRadius="2xl" boxShadow="2xl">
+        <Heading size="lg" mb={6} textAlign="center">✨ 여행 취향 상세 설문</Heading>
 
-        {/* 1. 여행 유형 */}
+        {/* 여행 유형 */}
         <Box mb={6}>
           <Text fontSize="sm" color="gray.500">Q1</Text>
           <Text fontSize="lg" fontWeight="bold" mb={3}>선호하는 여행 유형</Text>
@@ -136,7 +139,7 @@ function PreferenceSurvey() {
           </Wrap>
         </Box>
 
-        {/* 2. 활동 선택 */}
+        {/* 활동 선택 */}
         <Box mb={6}>
           <Text fontSize="sm" color="gray.500">Q2</Text>
           <Text fontSize="lg" fontWeight="bold" mb={3}>활동 선택</Text>
@@ -158,7 +161,7 @@ function PreferenceSurvey() {
           </Wrap>
         </Box>
 
-        {/* 3. 이동수단 */}
+        {/* 이동수단 */}
         <Box mb={6}>
           <Text fontSize="sm" color="gray.500">Q3</Text>
           <Text fontSize="lg" fontWeight="bold" mb={3}>선호하는 이동수단</Text>
@@ -174,7 +177,7 @@ function PreferenceSurvey() {
           </RadioGroup>
         </Box>
 
-        {/* 4. 활동량 */}
+        {/* 활동량 */}
         <Box mb={6}>
           <Text fontSize="sm" color="gray.500">Q4</Text>
           <Text fontSize="lg" fontWeight="bold" mb={3}>활동량 (1~10)</Text>

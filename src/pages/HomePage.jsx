@@ -21,6 +21,7 @@ import { useTravel } from "../contexts/TravelContext"; // 다시 추가
 import { useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import axios from "axios";
+import HotDestinations from "../components/HotDestinations";
 
 function HomePage() {
   const location = useLocation();
@@ -97,9 +98,9 @@ function HomePage() {
       </Box>
 
       <Grid templateColumns="repeat(3, 1fr)" gap={6} p={10}>
-        <GridItem colSpan={2}>
-          {/* <TravelCardList /> */}
-        </GridItem>
+      <GridItem colSpan={2}>
+        <HotDestinations /> {/* 핫한 여행지 슬라이드 카드 */}
+      </GridItem>
 
         <GridItem w="100%" bg="white" p={4} borderRadius="lg" boxShadow="sm">
           <Text fontWeight="bold" mb={2}>최근 일정</Text>
