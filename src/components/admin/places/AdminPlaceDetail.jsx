@@ -1,135 +1,154 @@
 // src/components/admin/places/AdminPlaceDetail.jsx
-import React, { useEffect, useState, useRef } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import React, { useEffect, useState } from "react";
 import {
   Box,
   Heading,
   Text,
-  Image,
   Button,
   VStack,
-  Spinner,
   HStack,
-  AlertDialog,
-  AlertDialogOverlay,
-  AlertDialogContent,
-  AlertDialogHeader,
-  AlertDialogBody,
-  AlertDialogFooter,
-  useDisclosure,
+  Badge,
   useToast,
+  Spinner,
+  Center,
 } from "@chakra-ui/react";
-import EditPlaceDetailModal from "./EditPlaceDetailModal";
-import dummyPlaces from "../../../data/dummyPlaces";
+import { useParams, useNavigate } from "react-router-dom";
+import axios from "axios";
 
 const AdminPlaceDetail = () => {
   const { id } = useParams();
-  const navigate = useNavigate();
   const [place, setPlace] = useState(null);
   const [loading, setLoading] = useState(true);
-
-  const { isOpen: isDeleteOpen, onOpen, onClose } = useDisclosure();
-  const cancelRef = useRef();
-
-  const {
-    isOpen: isEditOpen,
-    onOpen: onEditOpen,
-    onClose: onEditClose,
-  } = useDisclosure();
-
+  const [error, setError] = useState(false);
+  const navigate = useNavigate();
   const toast = useToast();
 
   useEffect(() => {
-    const found = dummyPlaces.find((p) => p.id === parseInt(id));
-    setTimeout(() => {
-      if (found) setPlace(found);
-      setLoading(false);
-    }, 500);
-  }, [id]);
+    const fetchPlaceDetail = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          toast({
+            title: "로그인이 필요합니다",
+            description: "관리자 페이지 접근을 위해 로그인해주세요.",
+            status: "error",
+            duration: 3000,
+            isClosable: true,
+          });
+          navigate('/login');
+          return;
+        }
 
-  const handleDelete = async () => {
-    try {
-      const success = Math.random() > 0.5;
-      if (!success) throw new Error("서버 오류");
-      toast({
-        title: "삭제가 완료되었습니다.",
-        status: "success",
-        duration: 2000,
-        isClosable: true,
-      });
-      navigate("/admin/places");
-    } catch {
-      toast({
-        title: "삭제 실패",
-        description: "잠시 후 다시 시도해주세요.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-    }
-  };
+        const response = await axios.get(`http://localhost:3000/admin/destinations/${id}`, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
 
-  const handleSave = (updatedData) => {
-    setPlace(updatedData);
-    toast({
-      title: "장소 정보가 수정되었습니다.",
-      status: "success",
-      duration: 2000,
-      isClosable: true,
-    });
-    onEditClose();
-  };
+        if (response.data.success) {
+          setPlace(response.data.data);
+        }
+      } catch (error) {
+        console.error("여행지 상세 정보 가져오기 오류:", error);
+        setError(true);
+        
+        if (error.response) {
+          if (error.response.status === 401) {
+            toast({
+              title: "인증 오류",
+              description: "로그인이 만료되었습니다. 다시 로그인해주세요.",
+              status: "error",
+              duration: 3000,
+              isClosable: true,
+            });
+            localStorage.removeItem('token');
+            navigate('/login');
+          } else if (error.response.status === 403) {
+            toast({
+              title: "권한 없음",
+              description: "관리자 권한이 필요합니다.",
+              status: "error",
+              duration: 3000,
+              isClosable: true,
+            });
+            navigate('/');
+          } else if (error.response.status === 404) {
+            toast({
+              title: "여행지를 찾을 수 없음",
+              description: "요청하신 여행지가 존재하지 않습니다.",
+              status: "error",
+              duration: 3000,
+              isClosable: true,
+            });
+            navigate('/admin/places');
+          }
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  if (loading) return <Spinner mt={10} />;
+    fetchPlaceDetail();
+  }, [id, navigate, toast]);
 
-  if (!place)
+  if (loading) {
     return (
-      <Box textAlign="center" mt={10}>
-        <Text fontSize="lg" color="red.500" mb={4}>해당 장소를 찾을 수 없습니다.</Text>
-        <Button onClick={() => navigate(-1)}>돌아가기</Button>
+      <Center h="100vh">
+        <Spinner size="xl" />
+      </Center>
+    );
+  }
+
+  if (error || !place) {
+    return (
+      <Box p={6}>
+        <Text color="red.500" fontWeight="bold">여행지 정보를 불러올 수 없습니다</Text>
+        <Button mt={4} onClick={() => navigate('/admin/places')}>
+          목록으로 돌아가기
+        </Button>
       </Box>
     );
+  }
 
   return (
     <Box p={6}>
-      <Heading size="lg" mb={4}>장소 상세 정보</Heading>
+      <VStack align="stretch" spacing={6}>
+        <HStack justify="space-between">
+          <Heading size="lg">{place.destination_name}</Heading>
+          <Badge colorScheme="blue" fontSize="md" p={2}>
+            {place.category}
+          </Badge>
+        </HStack>
 
-      <VStack align="start" spacing={4}>
-        <Image src={place.image} alt={place.name} borderRadius="md" />
-        <Text fontSize="xl" fontWeight="bold">{place.name}</Text>
-        <Text>주소: {place.region}</Text>
-        <Text>태그: {place.tag}</Text>
-        <Text>설명: {place.description}</Text>
-        <Text>리뷰 수: {place.reviewStats?.count ?? 0}</Text>
-        <Text>평균 평점: ⭐ {place.reviewStats?.avg ?? 0}</Text>
-        <Text>등록일: {place.registeredAt}</Text>
-        <Text>등록자: {place.registeredBy}</Text>
+        <Box>
+          <Heading size="md" mb={2}>기본 정보</Heading>
+          <VStack align="stretch" spacing={2}>
+            <Text><strong>주소:</strong> {place.address}</Text>
+            <Text><strong>설명:</strong> {place.description}</Text>
+            <Text><strong>등록일:</strong> {new Date(place.created_at).toLocaleDateString()}</Text>
+            <Text><strong>수정일:</strong> {new Date(place.updated_at).toLocaleDateString()}</Text>
+          </VStack>
+        </Box>
 
-        <HStack pt={4}>
-          <Button colorScheme="blue" onClick={onEditOpen}>수정</Button>
-          <Button colorScheme="red" onClick={onOpen}>삭제</Button>
+        <Box>
+          <Heading size="md" mb={2}>추가 정보</Heading>
+          <VStack align="stretch" spacing={2}>
+            <Text><strong>위도:</strong> {place.latitude}</Text>
+            <Text><strong>경도:</strong> {place.longitude}</Text>
+            <Text><strong>전화번호:</strong> {place.phone_number || '없음'}</Text>
+            <Text><strong>운영시간:</strong> {place.operating_hours || '없음'}</Text>
+          </VStack>
+        </Box>
+
+        <HStack spacing={4}>
+          <Button colorScheme="blue" onClick={() => navigate(`/admin/places/${id}/edit`)}>
+            수정하기
+          </Button>
+          <Button onClick={() => navigate('/admin/places')}>
+            목록으로 돌아가기
+          </Button>
         </HStack>
       </VStack>
-
-      <AlertDialog isOpen={isDeleteOpen} leastDestructiveRef={cancelRef} onClose={onClose}>
-        <AlertDialogOverlay>
-          <AlertDialogContent>
-            <AlertDialogHeader>삭제 확인</AlertDialogHeader>
-            <AlertDialogBody>정말 이 장소를 삭제하시겠습니까?</AlertDialogBody>
-            <AlertDialogFooter>
-              <Button ref={cancelRef} onClick={onClose}>취소</Button>
-              <Button colorScheme="red" onClick={handleDelete} ml={3}>삭제</Button>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialogOverlay>
-      </AlertDialog>
-
-      <EditPlaceDetailModal
-        isOpen={isEditOpen}
-        onClose={onEditClose}
-        place={place}
-        onSave={handleSave}
-      />
     </Box>
   );
 };

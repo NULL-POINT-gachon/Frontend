@@ -12,64 +12,86 @@ import {
   Select,
   Input,
   Text,
+  useToast,
 } from "@chakra-ui/react";
 import { useNavigate } from "react-router-dom";
-// import { getAllReviews } from "../../api/reviewAPI"; // 나중에 활성화
+import axios from "axios";
 
 const AdminReviews = () => {
   const [reviews, setReviews] = useState([]);
   const [error, setError] = useState(false);
   const [search, setSearch] = useState("");
-  const [reportFilter, setReportFilter] = useState("전체");
+  const [statusFilter, setStatusFilter] = useState("전체");
   const [sortOption, setSortOption] = useState("기본");
-
   const navigate = useNavigate();
+  const toast = useToast();
+
+  const fetchReviews = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        toast({
+          title: "로그인이 필요합니다",
+          description: "관리자 페이지 접근을 위해 로그인해주세요.",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+        navigate('/login');
+        return;
+      }
+
+      const response = await axios.get('http://localhost:3000/admin/reviews', {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      if (response.data.success) {
+        setReviews(response.data.data);
+      }
+    } catch (error) {
+      console.error("리뷰 목록 가져오기 오류:", error);
+      setError(true);
+      
+      if (error.response) {
+        if (error.response.status === 401) {
+          toast({
+            title: "인증 오류",
+            description: "로그인이 만료되었습니다. 다시 로그인해주세요.",
+            status: "error",
+            duration: 3000,
+            isClosable: true,
+          });
+          localStorage.removeItem('token');
+          navigate('/login');
+        } else if (error.response.status === 403) {
+          toast({
+            title: "권한 없음",
+            description: "관리자 권한이 필요합니다.",
+            status: "error",
+            duration: 3000,
+            isClosable: true,
+          });
+          navigate('/');
+        }
+      }
+    }
+  };
 
   useEffect(() => {
-    // 더미 데이터 기반 화면 표시용
-    const dummyData = [
-      {
-        id: 1,
-        author: "김가천",
-        place: "제주도",
-        content: "정말 아름다운 풍경이 인상적이었어요!",
-        rating: 5,
-        reported: false,
-      },
-      {
-        id: 2,
-        author: "이가천",
-        place: "경복궁",
-        content: "역사의 숨결을 느낄 수 있었습니다.",
-        rating: 4,
-        reported: true,
-      },
-    ];
-    setReviews(dummyData);
-
-    // 나중에 실제 API 연동 시 사용
-    /*
-    const fetchData = async () => {
-      try {
-        const res = await getAllReviews();
-        setReviews(res.data);
-      } catch {
-        setError(true);
-      }
-    };
-    fetchData();
-    */
+    fetchReviews();
   }, []);
 
   const filtered = reviews
     .filter((r) => {
       const matchKeyword =
-        r.author.includes(search) || r.place.includes(search);
-      const matchReport =
-        reportFilter === "전체" ||
-        (reportFilter === "신고됨" && r.reported) ||
-        (reportFilter === "정상" && !r.reported);
-      return matchKeyword && matchReport;
+        r.user_name?.includes(search) || r.destination_name?.includes(search);
+      const matchStatus =
+        statusFilter === "전체" ||
+        (statusFilter === "비활성화" && r.status === 0) ||
+        (statusFilter === "활성화" && r.status === 1);
+      return matchKeyword && matchStatus;
     })
     .sort((a, b) => {
       if (sortOption === "평점높은순") return b.rating - a.rating;
@@ -91,13 +113,13 @@ const AdminReviews = () => {
           maxW="250px"
         />
         <Select
-          value={reportFilter}
-          onChange={(e) => setReportFilter(e.target.value)}
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
           maxW="150px"
         >
           <option value="전체">전체</option>
-          <option value="신고됨">신고된 리뷰</option>
-          <option value="정상">정상 리뷰</option>
+          <option value="비활성화">비활성화</option>
+          <option value="활성화">활성화</option>
         </Select>
         <Select
           value={sortOption}
@@ -114,6 +136,10 @@ const AdminReviews = () => {
         <Text color="red.500" fontWeight="bold">
           리뷰를 불러오지 못했습니다
         </Text>
+      ) : filtered.length === 0 ? (
+        <Text color="gray.500" textAlign="center" py={4}>
+          {search || statusFilter !== "전체" ? "검색 조건에 맞는 리뷰가 없습니다" : "등록된 리뷰가 없습니다"}
+        </Text>
       ) : (
         <Box overflowX="auto">
           <Table variant="simple">
@@ -123,7 +149,7 @@ const AdminReviews = () => {
                 <Th textAlign="left" minW="120px">장소</Th>
                 <Th textAlign="left" minW="300px">내용</Th>
                 <Th textAlign="left" minW="100px">평점</Th>
-                <Th textAlign="left" minW="100px">신고 여부</Th>
+                <Th textAlign="left" minW="100px">상태</Th>
               </Tr>
             </Thead>
             <Tbody>
@@ -133,15 +159,15 @@ const AdminReviews = () => {
                   onClick={() => navigate(`/admin/reviews/${r.id}`)}
                   _hover={{ bg: "gray.50", cursor: "pointer" }}
                 >
-                  <Td>{r.author}</Td>
-                  <Td>{r.place}</Td>
-                  <Td>{r.content}</Td>
+                  <Td>{r.user_name}</Td>
+                  <Td>{r.destination_name}</Td>
+                  <Td>{r.review_content}</Td>
                   <Td>{"⭐".repeat(r.rating)}</Td>
                   <Td>
-                    {r.reported ? (
-                      <Badge colorScheme="red">신고됨</Badge>
+                    {r.status === 1 ? (
+                      <Badge colorScheme="green">활성화</Badge>
                     ) : (
-                      <Badge colorScheme="green">정상</Badge>
+                      <Badge colorScheme="red">비활성화</Badge>
                     )}
                   </Td>
                 </Tr>
