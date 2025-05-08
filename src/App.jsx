@@ -24,6 +24,7 @@ import FinalRecommendationPage from "./pages/FinalRecommendationPage";
 import PlanDetailPage from "./pages/PlanDetailPage";
 import AdminLoginPage from "./pages/AdminLoginPage";
 import MyPlanPage from "./pages/MyPlanPage";
+import NotificationsPage from "./pages/NotificationsPage";
 
 import AdminDashboard from "./components/admin/AdminDashboard";
 import AdminHome from "./components/admin/AdminHome";
@@ -137,6 +138,7 @@ function App() {
                   path="/mypage/delete"
                   element={<PrivateRoute><AccountDeletePage /></PrivateRoute>}
                 />
+                <Route path="/notifications" element={<NotificationsPage />} />
              
 
               {/* 관리자 전용 라우트 */}
