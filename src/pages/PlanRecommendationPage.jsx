@@ -39,8 +39,6 @@ const PlanRecommendationPage = () => {
   const tripId = travelData.tripId;
   console.log("tripId", tripId);
 
-
-
   useEffect(() => {
     // 👉 추천 장소
     const initial = location.state?.recommended || [];   // [] fallback
@@ -257,7 +255,6 @@ const PlanRecommendationPage = () => {
             <Button mr={3} onClick={onConfirmClose}>취소</Button>
             <Button colorScheme="green" isDisabled={!newTitle} onClick={async () => {
               try {
-                const tripId = location.state.tripId;
                 await axios.patch(
                   `http://localhost:3000/trip/${tripId}`,
                   { "일정명": newTitle, "여행상태": "완료" },
