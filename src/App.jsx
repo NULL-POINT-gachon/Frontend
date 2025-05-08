@@ -25,6 +25,7 @@ import PlanDetailPage from "./pages/PlanDetailPage";
 import AdminLoginPage from "./pages/AdminLoginPage";
 import MyPlanPage from "./pages/MyPlanPage";
 import NotificationsPage from "./pages/NotificationsPage";
+import HotDestinationDetail from "./pages/HotDestinationDetail";
 
 import AdminDashboard from "./components/admin/AdminDashboard";
 import AdminHome from "./components/admin/AdminHome";
@@ -115,6 +116,9 @@ function App() {
                 <Route path="/preference" element={<PreferenceSurvey />} />
                 <Route path="/final-recommendation" element={<FinalRecommendation />} />
                 <Route path="/recommended-detail" element={<RecommendedPlaceDetail />} />
+
+                <Route path="/hot-destinations/:id" element={<HotDestinationDetail />} />
+
               
               </Route>
 
