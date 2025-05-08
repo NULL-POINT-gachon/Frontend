@@ -74,7 +74,9 @@ function HotDestinationDetail() {
           activity_level:     preference.intensity,
           place_name:         place.title,
           trip_duration:      tripDuration || 3,
-          trip_id:            travelData.tripId
+          trip_id:            travelData.tripId,
+          visit_date:         travelData.dateRange[0],
+          departure_date:     travelData.dateRange[1]
         }),
       });
   

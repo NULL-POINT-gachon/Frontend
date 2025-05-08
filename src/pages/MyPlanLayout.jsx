@@ -5,17 +5,20 @@ import {
 } from "@chakra-ui/react";
 import Header from "../components/Header";
 import axios from "axios";
+import { useAuth } from "../contexts/AuthContext";
 
 export default function MyPlanLayout() {
   const navigate = useNavigate();
   const { tripId } = useParams();         // 선택된 일정 ID(없을 수도 있음)
   const [trips, setTrips] = useState([]);
+  const { token } = useAuth();
 
   /* 일정 목록 로딩 */
   useEffect(() => {
     (async () => {
       try {
         const { data } = await axios.get("http://localhost:3000/trip/all",
+            { headers: { Authorization: `Bearer ${token}` } },
           { params: { page: 1, limit: 100 } });
         if (data.result_code === 200) setTrips(data.trips);
       } catch (e) { console.error(e); }

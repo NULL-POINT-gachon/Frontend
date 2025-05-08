@@ -1,8 +1,8 @@
 // src/components/ScheduleCard.jsx
 import React from "react";
-import { Box, Button, HStack, Text } from "@chakra-ui/react";
+import { Box, Button, HStack, Text, IconButton } from "@chakra-ui/react";
 import { StarIcon } from "@chakra-ui/icons";
-
+import { DeleteIcon } from "@chakra-ui/icons";
 const ScheduleCard = ({ item, onDelete, onReview }) => {
   return (
     <Box p={4} borderWidth="1px" borderRadius="md">
@@ -16,9 +16,11 @@ const ScheduleCard = ({ item, onDelete, onReview }) => {
       <Text mt={1} fontSize="sm" color="gray.600">
         ⏰ {item.time} / 🚗 {item.transport}
       </Text>
-      <Button size="xs" colorScheme="red" mt={2} onClick={onDelete}>
-        삭제
-      </Button>
+      <IconButton
+          aria-label="삭제" icon={<DeleteIcon/>}
+          size="sm" colorScheme="red"
+          onClick={onDelete}
+      />
     </Box>
   );
 };
