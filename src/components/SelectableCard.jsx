@@ -2,15 +2,15 @@ import React from "react";
 import { Box, useRadio } from "@chakra-ui/react";
 
 function SelectableCard(props) {
-  const { getInputProps, getCheckboxProps } = useRadio(props);
-  const input = getInputProps();
-  const checkbox = getCheckboxProps();
+  const { getInputProps, getRadioProps } = useRadio(props);
+  const input    = getInputProps();
+  const radioBox = getRadioProps();
 
   return (
     <Box as="label">
       <input {...input} />
       <Box
-        {...checkbox}
+        {...radioBox}
         cursor="pointer"
         borderWidth="2px"
         borderRadius="full"
