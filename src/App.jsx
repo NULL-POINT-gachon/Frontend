@@ -114,6 +114,17 @@ function App() {
                 <Route path="/preference" element={<PreferenceSurvey />} />
                 <Route path="/final-recommendation" element={<FinalRecommendation />} />
                 <Route path="hot-destinations/:id" element={<HotDestinationDetail />} />
+              
+              </Route>
+
+              {/* 전체화면 라우트 */}
+              <Route path="/plan" element={<PlanRecommendationPage />} />
+              <Route path="/plan/:region" element={<PrivateRoute><PlanDetailPage /></PrivateRoute>}/>
+              <Route path="/final-recommendation-page" element={<FinalRecommendationPage />} />
+              <Route
+                path="/my-plan"
+                element={<PrivateRoute><MyPlanPage /></PrivateRoute>}
+/>
                 <Route
                   path="/mypage"
                   element={<PrivateRoute><MyPage /></PrivateRoute>}
@@ -126,16 +137,7 @@ function App() {
                   path="/mypage/delete"
                   element={<PrivateRoute><AccountDeletePage /></PrivateRoute>}
                 />
-              </Route>
-
-              {/* 전체화면 라우트 */}
-              <Route path="/plan" element={<PlanRecommendationPage />} />
-              <Route path="/plan/:region" element={<PrivateRoute><PlanDetailPage /></PrivateRoute>}/>
-              <Route path="/final-recommendation-page" element={<FinalRecommendationPage />} />
-              <Route
-                path="/my-plan"
-                element={<PrivateRoute><MyPlanPage /></PrivateRoute>}
-/>
+             
 
               {/* 관리자 전용 라우트 */}
               <Route path="/admin" element={<AdminRoute />}>
