@@ -17,7 +17,7 @@ import {
   FormLabel,
   VStack
 } from "@chakra-ui/react";
-import Header from "../components/Header";
+// import Header from "../components/Header";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
@@ -121,7 +121,7 @@ const AccountDeletePage = () => {
 
   return (
     <Box bg="white" minH="100vh">
-      <Header />
+      {/* <Header /> */}
       <Box bgGradient="linear(to-b, red.100, white)" py={10} textAlign="center">
         <Heading size="lg">계정 탈퇴</Heading>
       </Box>

@@ -1,10 +1,14 @@
 import React from "react";
+import { useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { useAuth } from "./contexts/AuthContext";
 import { ChakraProvider } from "@chakra-ui/react";
-import { Routes, Route } from "react-router-dom";
+import {  Routes, Route } from "react-router-dom";
 
 import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/LoginPage";
 import SignUpPage from "./pages/SignUpPage";
+import CompleteProfilePage from "./pages/CompleteProfilePage"; 
 import TravelInfoInput from "./pages/TravelInfoInput";
 import MoodInput from "./pages/MoodInput";
 import Summary from "./pages/Summary";
@@ -46,6 +50,34 @@ import { AdminAuthProvider } from "./contexts/AdminAuthContext";
 import PrivateRoute from "./components/PrivateRoute";
 import Layout from "./components/Layout";
 
+function TokenHandler() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { login } = useAuth();
+  
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const token = params.get('token');
+    
+    if (token) {
+      fetch('http://localhost:3000/user/profile', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          login(data.data.name, token);
+          navigate('/', { replace: true });
+        }
+      })
+      .catch(error => console.error("프로필 조회 실패:", error));
+    }
+  }, [location, navigate, login]);
+  
+  return null;
+}
 function App() {
   return (
     <ChakraProvider>
@@ -57,7 +89,9 @@ function App() {
               <Route path="/" element={<HomePage />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/signup" element={<SignUpPage />} />
+              <Route path="/complete-profile" element={<CompleteProfilePage />} />
               <Route path="/admin/login" element={<AdminLoginPage />} />
+              <Route path="*" element={<TokenHandler />} />
 
               {/* 공통 레이아웃 적용 라우트 */}
               <Route element={<Layout />}>

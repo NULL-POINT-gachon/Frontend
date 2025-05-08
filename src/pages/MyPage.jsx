@@ -10,7 +10,7 @@ import {
   useColorModeValue,
 } from "@chakra-ui/react";
 import { FaUserCog, FaInfoCircle } from "react-icons/fa";
-import Header from "../components/Header";
+// Header 임포트 제거
 
 const MyPage = () => {
   const navigate = useNavigate();
@@ -33,7 +33,7 @@ const MyPage = () => {
 
   return (
     <Box bg="white" minH="100vh">
-      <Header />
+      {/* Header 컴포넌트 제거 */}
 
       <Box bgGradient="linear(to-b, blue.100, white)" py={10} textAlign="center">
         <Heading size="lg">마이페이지</Heading>
