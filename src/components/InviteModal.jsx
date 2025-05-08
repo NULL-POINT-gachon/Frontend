@@ -1,3 +1,5 @@
+// InviteModal.jsx (이메일 기반 공유 전용)
+
 import React, { useState, useEffect } from "react";
 import {
   Modal, ModalOverlay, ModalContent, ModalHeader, ModalFooter, ModalBody,
@@ -9,7 +11,6 @@ import { AddIcon } from "@chakra-ui/icons";
 const InviteModal = ({ isOpen, onClose, regionName, startDate, endDate }) => {
   const toast = useToast();
 
-  const [inviteMethod, setInviteMethod] = useState("email");
   const [emailInput, setEmailInput] = useState("");
   const [invitedFriends, setInvitedFriends] = useState([]);
 
@@ -30,7 +31,7 @@ const InviteModal = ({ isOpen, onClose, regionName, startDate, endDate }) => {
   };
 
   const handleInviteSubmit = () => {
-    // 추후 백엔드 연동 예정
+    // TODO: 백엔드에 POST /trip/share 요청 예정
     toast({
       title: "공유 요청이 전송되었습니다.",
       description: `${invitedFriends.length}명에게 초대 이메일이 발송됩니다.`,
@@ -40,12 +41,10 @@ const InviteModal = ({ isOpen, onClose, regionName, startDate, endDate }) => {
     onClose();
   };
 
-  // 모달 닫을 때 초기화
   useEffect(() => {
     if (!isOpen) {
       setEmailInput("");
       setInvitedFriends([]);
-      setInviteMethod("email");
     }
   }, [isOpen]);
 
@@ -53,58 +52,30 @@ const InviteModal = ({ isOpen, onClose, regionName, startDate, endDate }) => {
     <Modal isOpen={isOpen} onClose={onClose} size="md">
       <ModalOverlay />
       <ModalContent>
-        <ModalHeader>친구 초대하기</ModalHeader>
+        <ModalHeader>이메일로 일정 공유</ModalHeader>
         <ModalCloseButton />
         <ModalBody>
           <Text fontWeight="bold" mb={1}>{regionName} 여행 초대</Text>
           <Text fontSize="sm" color="gray.600" mb={4}>{startDate} ~ {endDate}</Text>
 
-          <HStack mb={4} spacing={2}>
-            <Button
-              variant={inviteMethod === "email" ? "solid" : "outline"}
-              colorScheme="blue"
-              onClick={() => setInviteMethod("email")}
-            >
-              이메일
-            </Button>
-            <Button
-              variant={inviteMethod === "link" ? "solid" : "outline"}
-              colorScheme="blue"
-              onClick={() => setInviteMethod("link")}
-            >
-              링크
-            </Button>
-          </HStack>
-
-          {inviteMethod === "email" && (
-            <Box mb={4}>
-              <HStack>
-                <Input
-                  placeholder="초대할 이메일 주소 입력"
-                  value={emailInput}
-                  onChange={(e) => setEmailInput(e.target.value)}
-                />
-                <IconButton
-                  icon={<AddIcon />}
-                  colorScheme="blue"
-                  onClick={handleAddEmail}
-                  aria-label="추가"
-                />
-              </HStack>
-              <Text fontSize="sm" mt={1} color="gray.500">
-                이메일 주소를 입력해 초대 요청을 보낼 수 있습니다.
-              </Text>
-            </Box>
-          )}
-
-          {inviteMethod === "link" && (
-            <Box mb={4}>
-              <Text fontSize="sm" color="gray.500" mb={2}>아래 링크를 복사해 공유하세요:</Text>
-              <Box bg="gray.100" p={2} borderRadius="md" fontSize="sm">
-                https://yourapp.com/invite?tripId=abc123
-              </Box>
-            </Box>
-          )}
+          <Box mb={4}>
+            <HStack>
+              <Input
+                placeholder="초대할 이메일 주소 입력"
+                value={emailInput}
+                onChange={(e) => setEmailInput(e.target.value)}
+              />
+              <IconButton
+                icon={<AddIcon />}
+                colorScheme="blue"
+                onClick={handleAddEmail}
+                aria-label="추가"
+              />
+            </HStack>
+            <Text fontSize="sm" mt={1} color="gray.500">
+              이메일 주소를 입력해 초대 요청을 보낼 수 있습니다.
+            </Text>
+          </Box>
 
           <Divider mb={4} />
 
