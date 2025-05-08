@@ -76,7 +76,7 @@ import {
                   description={place.description}
                   image={place.image}
                   tags={place.tags}
-                  onClick={() => navigate(`/hot-destinations/${place.id}`, { state: { place } })}
+                  onClick={() => navigate("/recommended-detail", { state: { place } })}
                 />
               ))}
             </SimpleGrid>

@@ -1,142 +1,168 @@
-import React, { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
 import {
-  Box,
-  Image,
-  Text,
-  Badge,
-  Wrap,
-  WrapItem,
-  Button,
-  useToast,
-  Spinner,
+  Box, Image, Text, Heading, Badge, VStack, HStack,
+  Textarea, Button, Divider, useToast, Icon, Flex
 } from "@chakra-ui/react";
-import { useLocation } from "react-router-dom";
-import { useTravel } from "../contexts/TravelContext";
-// import axios from "axios"; // 연동 시 활성화
+import { useParams } from "react-router-dom";
+import { StarIcon } from "@chakra-ui/icons";
+import { hotPlaces } from "../data/hotPlaces";
 
 function HotDestinationDetail() {
   const { id } = useParams();
-  const navigate = useNavigate();
   const toast = useToast();
-  const { travelData } = useTravel();
-  const { state }     = useLocation();
-
   const [place, setPlace] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [reviewText, setReviewText] = useState("");
+  const [rating, setRating] = useState(0);
+  const [editingId, setEditingId] = useState(null);
+  const [editedText, setEditedText] = useState("");
+  const [editedRating, setEditedRating] = useState(0);
+
+  const currentUser = { id: 1, name: "guest" }; // 추후 useAuth에서 가져올 수 있음
+
+  const [reviews, setReviews] = useState([
+    {
+      id: 1,
+      user: { id: 1, name: "사용자1" },
+      content: "여기 이쁘구재밌구 너무 좋아요~",
+      rating: 5,
+      createdAt: "2025-05-08"
+    },
+    {
+      id: 2,
+      user: { id: 2, name: "test1" },
+      content: "여기 이쁘구재밌구 너무 좋아요~",
+      rating: 4,
+      createdAt: "2025-05-08"
+    },
+  ]);
 
   useEffect(() => {
-    if (state?.place) {
-      setPlace(state.place);
-      setLoading(false);
+    const matched = hotPlaces.find((p) => p.id === Number(id));
+    if (matched) setPlace(matched);
+  }, [id]);
+
+  const createReview = async () => {
+    if (!reviewText || rating === 0) {
+      toast({ title: "별점과 후기를 입력해주세요.", status: "warning", duration: 2000, isClosable: true });
       return;
     }
-
-  }, [id, toast]);
-
-  const MOOD_MAP = {
-    설렘: 1, 힐링: 2, 감성: 3, 여유: 4,
-    활력: 5, 모험: 6, 로맨틱: 7, 재충전: 8
+    const newReview = {
+      id: Date.now(),
+      user: currentUser,
+      content: reviewText,
+      rating,
+      createdAt: new Date().toLocaleDateString(),
+    };
+    setReviews([newReview, ...reviews]);
+    setReviewText("");
+    setRating(0);
   };
 
-  const handleCreatePlan = async () => {
-    try {
-      /* ---------- 1. 필요 데이터 꺼내기 ---------- */
-      const { selectedCity, people, moods, tripDuration, preference } = travelData;
-  
-      // 활동 ID 매핑 (예시)
-      const ACTIVITY_ID = {
-        "맛집 탐방": 1, "카페 투어": 3, "전시 관람": 5, "스파": 6, "쇼핑": 12,
-        등산: 7, "해변 산책": 8, 액티비티: 9, "유적지 탐방": 10, 테마파크: 11
-      };
-  
-      // 감정 ID는 이미 그대로 저장돼 있다고 가정 (빈 배열이면 1 기본)
-      const Mood_Map = {
-        설렘: 1, 힐링: 2, 감성: 3, 여유: 4,
-        활력: 5, 모험: 6, 로맨틱: 7, 재충전: 8
-      }
-  
-      /* ---------- 2. POST ---------- */
-      const res = await fetch("http://localhost:3000/trip/recommendation/trip", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-        body: JSON.stringify({
-          /* 백엔드 필드명 기준 -------- */
-          city:               selectedCity,
-          activity_type:      preference.type,                            // "실내" / "야외"
-          activity_ids:       [ACTIVITY_ID[preference.activity] || 1],    // 한 개만 예시
-          emotion_ids:        travelData.moods.map(m => MOOD_MAP[m]).filter(Boolean) || [1],
-          preferred_transport:  preference.transport,                       // 스펠링 주의
-          companion:   people || 1,
-          activity_level:     preference.intensity,
-          place_name:         place.title,
-          trip_duration:      tripDuration || 3
-        }),
-      });
-  
-      const result = await res.json();
-  
-      if (res.ok) {
-        navigate("/plan", { state: { plan: result.data } });
-      } else {
-        toast({
-          title: result.message || "추천 실패",
-          status: "error",
-          duration: 3000,
-          isClosable: true,
-        });
-      }
-    } catch (err) {
-      toast({
-        title: "일정 추천 요청 실패",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-    }
+  const updateReview = async (id) => {
+    setReviews(reviews.map((r) => r.id === id ? { ...r, content: editedText, rating: editedRating } : r));
+    setEditingId(null);
+    setEditedText("");
+    setEditedRating(0);
   };
-  
 
-  if (loading) {
-    return (
-      <Box textAlign="center" mt={20}>
-        <Spinner size="xl" color="blue.500" />
-        <Text mt={4}>장소 정보를 불러오는 중입니다...</Text>
-      </Box>
-    );
-  }
+  const deleteReview = async (id) => {
+    setReviews(reviews.filter((r) => r.id !== id));
+  };
 
-  if (!place) {
-    return (
-      <Box textAlign="center" mt={20}>
-        <Text fontSize="lg">장소 정보를 찾을 수 없습니다.</Text>
-      </Box>
-    );
-  }
+  const handleEdit = (review) => {
+    setEditingId(review.id);
+    setEditedText(review.content);
+    setEditedRating(review.rating);
+  };
+
+  if (!place) return <Text>여행지를 불러오는 중입니다...</Text>;
 
   return (
-    <Box maxW="600px" mx="auto" mt={10} p={4}>
-      <Text fontSize="3xl" fontWeight="bold" mb={4}>
-        {place.title}
-      </Text>
-      <Image src={place.image} alt={place.title} borderRadius="md" mb={4} />
-      <Text mb={4}>{place.description}</Text>
-      <Wrap mb={6}>
-        {place.tags.map((tag, idx) => (
-          <WrapItem key={idx}>
-            <Badge colorScheme="blue" px={3} py={1} borderRadius="md">
-              #{tag}
-            </Badge>
-          </WrapItem>
-        ))}
-      </Wrap>
+    <Box px={10} py={8}>
+      <Flex gap={10} maxW="1000px" mx="auto" align="start">
+        <Box bg="white" borderRadius="lg" boxShadow="md" overflow="hidden" w="300px">
+          <Image src={place.image} alt={place.title} w="100%" h="200px" objectFit="cover" />
+          <Box p={4}>
+            <Text fontSize="xs" color="purple.600" fontWeight="bold">TOP 1</Text>
+            <Text fontWeight="bold" fontSize="lg">{place.title}</Text>
+            <Text fontSize="sm" color="gray.600">{place.description}</Text>
+            <Text fontSize="sm" color="blue.600" mt={1}>★ {place.rating.toFixed(1)} ({place.reviews?.toLocaleString() || 0})</Text>
+          </Box>
+        </Box>
 
-      <Button colorScheme="blue" onClick={handleCreatePlan}>
-        이 장소로 일정 만들기
-      </Button>
+        <Box flex={1}>
+          <Text color="gray.600" mb={2}>{place.description.repeat(2)}</Text>
+          <Heading size="sm" mb={2}>#여행지_느낌표 <Text as="span" color="gray.500"> {reviews.length}</Text></Heading>
+
+          <Box bg="blue.50" p={4} borderRadius="md" mb={6}>
+            <HStack spacing={1} mb={2}>
+              {[1, 2, 3, 4, 5].map((star) => (
+                <Icon
+                  key={star}
+                  as={StarIcon}
+                  color={star <= rating ? "yellow.400" : "gray.300"}
+                  boxSize={5}
+                  cursor="pointer"
+                  onClick={() => setRating(star)}
+                />
+              ))}
+            </HStack>
+            <Textarea
+              placeholder="여행지에 대한 느낌을 자유롭게 남겨주세요."
+              value={reviewText}
+              onChange={(e) => setReviewText(e.target.value)}
+              mb={2}
+            />
+            <Button onClick={createReview} colorScheme="blue">등록</Button>
+          </Box>
+
+          <VStack align="stretch" spacing={4}>
+            {reviews.map((rev) => (
+              <Box key={rev.id}>
+                <HStack spacing={1}>
+                  {[1, 2, 3, 4, 5].map((i) => (
+                    <StarIcon
+                      key={i}
+                      color={i <= (editingId === rev.id ? editedRating : rev.rating) ? "yellow.400" : "gray.300"}
+                      fontSize="sm"
+                      cursor={editingId === rev.id ? "pointer" : "default"}
+                      onClick={() => editingId === rev.id && setEditedRating(i)}
+                    />
+                  ))}
+                </HStack>
+                {editingId === rev.id ? (
+                  <>
+                    <Textarea
+                      size="sm"
+                      value={editedText}
+                      onChange={(e) => setEditedText(e.target.value)}
+                      mt={1}
+                    />
+                    <HStack spacing={2} mt={1}>
+                      <Text fontSize="xs" color="gray.500">{rev.user.name}</Text>
+                      <Button size="xs" colorScheme="blue" onClick={() => updateReview(rev.id)}>저장</Button>
+                      <Button size="xs" onClick={() => setEditingId(null)}>취소</Button>
+                    </HStack>
+                  </>
+                ) : (
+                  <>
+                    <Text fontSize="sm" mt={1}>{rev.content}</Text>
+                    <HStack spacing={2} mt={1}>
+                      <Text fontSize="xs" color="gray.500">{rev.user.name}</Text>
+                      {rev.user.id === currentUser.id && (
+                        <>
+                          <Button size="xs" colorScheme="gray" variant="outline" onClick={() => handleEdit(rev)}>수정</Button>
+                          <Button size="xs" colorScheme="red" onClick={() => deleteReview(rev.id)}>삭제</Button>
+                        </>
+                      )}
+                    </HStack>
+                  </>
+                )}
+              </Box>
+            ))}
+          </VStack>
+        </Box>
+      </Flex>
     </Box>
   );
 }

@@ -1,0 +1,51 @@
+export const hotPlaces = [
+    {
+      id: 1,
+      title: "제주도",
+      description: "청정 자연과 먹거리의 섬",
+      image: "/images/jeju.jpg",
+      price: 129000,
+      rating: 4.8,
+    },
+    {
+      id: 2,
+      title: "속초",
+      description: "동해 바다와 설악산의 도시",
+      image: "/images/sokcho.png",
+      price: 89000,
+      rating: 4.5,
+    },
+    {
+      id: 3,
+      title: "전주",
+      description: "한옥마을과 맛집 여행의 중심",
+      image: "/images/jeonju.jpg",
+      price: 76000,
+      rating: 4.6,
+    },
+    {
+      id: 4,
+      title: "부산",
+      description: "해운대와 광안리가 있는 해양도시",
+      image: "/images/busan.jpg",
+      price: 109000,
+      rating: 4.7,
+    },
+    {
+      id: 5,
+      title: "경주",
+      description: "역사와 유적의 도시",
+      image: "/images/gyeongju.jpg",
+      price: 95000,
+      rating: 4.3,
+    },
+    {
+      id: 6,
+      title: "강릉",
+      description: "커피 거리와 해변이 유명한 동해안 도시",
+      image: "/images/gangneung.jpg",
+      price: 98000,
+      rating: 4.4,
+    },
+  ];
+  
