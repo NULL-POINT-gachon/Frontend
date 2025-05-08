@@ -4,127 +4,84 @@ import axios from "axios";
 const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [username, setUsername] = useState("");
-  const [token, setToken] = useState("");
+  /* 1️⃣  렌더 전에 localStorage 값을 읽어 초기화 */
+  const [token,     setToken]     = useState(() => localStorage.getItem("token") || "");
+  const [username,  setUsername]  = useState(() => localStorage.getItem("username") || "");
+  const [isLoggedIn,setIsLoggedIn]= useState(() => !!localStorage.getItem("token"));
 
-  // 앱 시작할 때 localStorage에서 로그인 정보 복원
+  /* 2️⃣  토큰 상태가 바뀔 때마다 Axios 헤더 자동 세팅 */
   useEffect(() => {
-    const savedUsername = localStorage.getItem("username");
-    const savedToken = localStorage.getItem("token");
-    
-    if (savedUsername && savedToken) {
-      setIsLoggedIn(true);
-      setUsername(savedUsername);
-      setToken(savedToken);
-      
-      // axios 기본 헤더 설정
-      axios.defaults.headers.common['Authorization'] = `Bearer ${savedToken}`;
+    if (token) {
+      axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+    } else {
+      delete axios.defaults.headers.common["Authorization"];
     }
-  }, []);
-  
-  // 토큰 가져오기 함수 (전역에 선언)
-  const getToken = () => localStorage.getItem("token");
+  }, [token]);
 
-  // 실제 백엔드 API로 로그인 요청을 보내는 함수
+  /* 3️⃣  이메일 / 비밀번호 로그인 */
   const loginWithCredentials = async (email, password) => {
     try {
-      const response = await axios.post("http://localhost:3000/user/login", {
-        email,
-        password
-      });
-      
-      console.log("로그인 응답:", response.data);
-      
-      if (response.data.success) {
-        const userData = response.data.data;
-        const authToken = userData.token;
-        const userName = userData.user.name;
-        
-        login(userName, authToken);
-        return { success: true };
-      } else {
-        throw new Error(response.data.message || "로그인에 실패했습니다");
-      }
-    } catch (error) {
-      console.error("로그인 오류:", error);
-      return { 
-        success: false, 
-        error: error.response?.data?.message || "로그인 중 오류가 발생했습니다" 
-      };
-    }
-  };
-  
-  // 기존 로그인 함수 (토큰 관리 추가)
-  const login = (name, authToken) => {
-    setIsLoggedIn(true);
-    setUsername(name);
-    localStorage.setItem("username", name);
-    
-    if (authToken) {
-      setToken(authToken);
-      localStorage.setItem("token", authToken);
-      axios.defaults.headers.common['Authorization'] = `Bearer ${authToken}`;
+      const { data } = await axios.post("http://localhost:3000/user/login", { email, password });
+
+      if (!data.success) throw new Error(data.message || "로그인 실패");
+      const { token: authToken, user } = data.data;
+
+      login(user.name, authToken);
+      return { success: true };
+    } catch (err) {
+      console.error("로그인 오류:", err);
+      return { success:false, error: err.response?.data?.message || err.message };
     }
   };
 
+  /* 4️⃣  공통 로그인 처리 */
+  const login = (name, authToken) => {
+    setUsername(name);
+    setToken(authToken);
+    setIsLoggedIn(true);
+
+    localStorage.setItem("username", name);        // ✅ 오타 수정
+    localStorage.setItem("token",    authToken);
+  };
+
+  /* 5️⃣  로그아웃 */
   const logout = () => {
     setIsLoggedIn(false);
     setUsername("");
     setToken("");
+
     localStorage.removeItem("username");
     localStorage.removeItem("token");
-    delete axios.defaults.headers.common['Authorization'];
   };
 
-  // 토큰이 유효한지 확인
-  const checkToken = () => {
-    return !!localStorage.getItem("token");
-  };
+  /* 6️⃣  프로필 추가 저장 (Google OAuth 등) */
+  const completeProfile = async (payload) => {
+    try {
+      const { data } = await axios.post("http://localhost:3000/user/complete-profile", payload);
+      if (!data.success) throw new Error(data.message || "프로필 저장 실패");
+      const { token: authToken, user } = data.data;
 
-  // 구글 로그인 후 추가 정보 저장
-const completeProfile = async (profileData) => {
-  try {
-    const response = await axios.post("http://localhost:3000/user/complete-profile", profileData);
-    
-    if (response.data.success) {
-      const userName = response.data.data?.user?.name || "";
-      const authToken = response.data.data?.token || "";
-      
-      // 저장 성공 시 로그인 처리
-      login(userName, authToken);
+      login(user.name, authToken);
       return { success: true };
-    } else {
-      throw new Error(response.data.message || "프로필 저장 실패");
+    } catch (err) {
+      return { success:false, error: err.response?.data?.message || err.message };
     }
-  } catch (error) {
-    console.error("프로필 완성 오류:", error);
-    return { 
-      success: false, 
-      error: error.response?.data?.message || "프로필 저장 중 오류가 발생했습니다" 
-    };
-  }
-};
+  };
 
-
+  const getToken  = () => token;
+  const checkToken= () => !!token;
 
   return (
-    <AuthContext.Provider value={{ 
-      isLoggedIn, 
-      username, 
-      token,
-      login, 
-      logout, 
+    <AuthContext.Provider value={{
+      isLoggedIn, username, token,
+      login, logout,
       loginWithCredentials,
-      getToken,
-      checkToken ,
-      completeProfile
+      completeProfile,
+      getToken, checkToken,
     }}>
       {children}
     </AuthContext.Provider>
   );
 }
 
-export function useAuth() {
-  return useContext(AuthContext);
-}
+export const useAuth = () => useContext(AuthContext);

@@ -3,23 +3,18 @@ import {
   Box, Flex, VStack, Text, Input, Button, Tag, HStack,
   useToast, Modal, ModalOverlay, ModalContent, ModalHeader,
   ModalBody, ModalCloseButton, useDisclosure, Select, IconButton,
-  SimpleGrid, Tabs, Tab, TabList, TabPanels, TabPanel
+  SimpleGrid, Tabs, Tab, TabList, TabPanels, TabPanel, ModalFooter,
 } from "@chakra-ui/react";
 import { AddIcon, DeleteIcon } from "@chakra-ui/icons";
 import MapPreview from "../components/MapPreview";
 import { useLocation, useNavigate } from "react-router-dom";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { useAuth } from "../contexts/AuthContext";
+import { CheckIcon } from "@chakra-ui/icons";
 import Header from "../components/Header";
 import axios from "axios";
+import { useTravel } from "../contexts/TravelContext";
 
-const dummyPlaces = [
-  { title: "속초해수욕장", tags: ["숙박"], defaultTime: "14:00", image: "/images/sokcho-beach.jpg" },
-  { title: "안목해변", tags: ["자연"], defaultTime: "16:00", image: "/images/anmok-beach.webp" },
-  { title: "설악산 국립공원", tags: ["자연", "등산"], defaultTime: "09:00", image: "/images/seoraksan.jpg" },
-  { title: "속초 아바이마을", tags: ["문화"], defaultTime: "13:30", image: "/images/abam-village.jpg" },
-  { title: "속초 중앙시장", tags: ["쇼핑", "현지"], defaultTime: "11:00", image: "/images/market.jpg" },
-];
 
 const PlanRecommendationPage = () => {
   const location = useLocation();
@@ -33,6 +28,29 @@ const PlanRecommendationPage = () => {
   const [selectedTime, setSelectedTime] = useState("12:00");
   const [selectedTransport, setSelectedTransport] = useState("도보");
   const { token } = useAuth();
+  const {
+    isOpen: isConfirmOpen,
+    onOpen: onConfirmOpen,
+    onClose: onConfirmClose,
+  } = useDisclosure();
+
+  const [newTitle, setNewTitle] = useState("");
+  const { travelData } = useTravel();
+  const tripId = travelData.tripId;
+  console.log("tripId", tripId);
+
+
+
+  useEffect(() => {
+    // 👉 추천 장소
+    const initial = location.state?.recommended || [];   // [] fallback
+    setRecommendedPlaces(initial);
+  
+    // 👉 기존 플랜 or 3일 기본 플랜
+    setPlan(location.state?.plan ?? {
+      days: [ { day:1, items:[] }, { day:2, items:[] }, { day:3, items:[] } ],
+    });
+  }, [location]);
 
   useEffect(() => {
     const fetchPlaces = async () => {
@@ -50,17 +68,36 @@ const PlanRecommendationPage = () => {
     fetchPlaces();
   }, [location]);
 
+  useEffect(() => {
+    // 👉 추천 장소
+    const initial = location.state?.recommended || [];   // [] fallback
+    setRecommendedPlaces(initial);
+  
+    // 👉 기존 플랜 or 3일 기본 플랜
+    setPlan(location.state?.plan ?? {
+      days: [ { day:1, items:[] }, { day:2, items:[] }, { day:3, items:[] } ],
+    });
+  }, [location]);
+  
   const handleAddSelectedPlace = () => {
     if (!selectedPlace) return;
+  
     const newItem = {
-      title: selectedPlace.title,
-      time: selectedTime,
-      tags: [...selectedPlace.tags, selectedTransport],
-      image: selectedPlace.image,
+      title:  selectedPlace.title,
+      time:   selectedTime,
+      tags:   [...selectedPlace.tags, selectedTransport],
+      image:  selectedPlace.image,
     };
+  
+    /* 🔹 플랜에 추가 */
     const newPlan = { ...plan };
     newPlan.days[selectedDayIndex].items.push(newItem);
     setPlan(newPlan);
+  
+    /* 🔹 추천 목록에서 빼기 */
+    setRecommendedPlaces(prev => prev.filter(p => p.title !== selectedPlace.title));
+  
+    /* UI 초기화 */
     onClose();
     setSelectedPlace(null);
     setSelectedTime("12:00");
@@ -130,11 +167,30 @@ const PlanRecommendationPage = () => {
                                       )}
                                       <Text fontWeight="bold">{item.title}</Text>
                                     </HStack>
-                                    <IconButton icon={<DeleteIcon />} size="sm" colorScheme="red" onClick={() => {
-                                      const newPlan = { ...plan };
-                                      newPlan.days[selectedDayIndex].items.splice(idx, 1);
-                                      setPlan(newPlan);
-                                    }} />
+                                    <IconButton
+                                      icon={<DeleteIcon />}
+                                      size="sm"
+                                      colorScheme="red"
+                                      onClick={() => {
+                                        /* 1) 플랜에서 제거 */
+                                        const removed = plan.days[selectedDayIndex].items[idx];
+                                        const newItems = plan.days[selectedDayIndex].items.filter((_, k) => k !== idx);
+                                        const newPlan = { ...plan };
+                                        newPlan.days[selectedDayIndex].items = newItems;
+                                        setPlan(newPlan);
+                                      
+                                        /* 2) 추천 목록에 다시 넣기(중복 방지) */
+                                        setRecommendedPlaces(prev => {
+                                          const exists = prev.some(p => p.title === removed.title);
+                                          return exists ? prev : [...prev, {
+                                            title: removed.title,
+                                            tags:  removed.tags.filter(t => !["도보","버스","택시"].includes(t)), // 교통 태그 제거
+                                            image: removed.image,
+                                            defaultTime: removed.time,
+                                          }];
+                                        });
+                                      }}
+                                    />
                                   </HStack>
                                   <Input mt={2} type="time" value={item.time} onChange={(e) => {
                                     const newPlan = { ...plan };
@@ -166,6 +222,9 @@ const PlanRecommendationPage = () => {
           <Button mt={4} colorScheme="blue" w="full" onClick={optimizeRoute}>
             🚗 최적 동선 보기
           </Button>
+          <Button leftIcon={<CheckIcon />} mt={2} w="full" onClick={onConfirmOpen} colorScheme="green">
+            ✅ 확정하기
+          </Button>
         </Box>
 
         <Box flex="1" bg="gray.100" p={0}>
@@ -179,6 +238,44 @@ const PlanRecommendationPage = () => {
         </Box>
       </Flex>
 
+      <Modal isOpen={isConfirmOpen} onClose={onConfirmClose} isCentered>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>일정을 확정하시겠습니까?</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <VStack spacing={4}>
+              <Text>확정 후에는 편집이 제한될 수 있습니다.</Text>
+              <Input
+                placeholder="여행 일정명 입력"
+                value={newTitle}
+                onChange={(e) => setNewTitle(e.target.value)}
+              />
+            </VStack>
+          </ModalBody>
+          <ModalFooter>
+            <Button mr={3} onClick={onConfirmClose}>취소</Button>
+            <Button colorScheme="green" isDisabled={!newTitle} onClick={async () => {
+              try {
+                const tripId = location.state.tripId;
+                await axios.patch(
+                  `http://localhost:3000/trip/${tripId}`,
+                  { "일정명": newTitle, "여행상태": "완료" },
+                  { headers:{ Authorization:`Bearer ${token}` } }
+                );
+                toast({ title:"일정이 확정되었습니다!", status:"success" });
+                onConfirmClose();
+                navigate(`/my-plan/${tripId}`);
+              } catch (err) {
+                toast({ title:"일정 확정 실패", status:"error" });
+              }
+            }}>
+              확정
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
       <Modal isOpen={isOpen} onClose={onClose} isCentered>
         <ModalOverlay />
         <ModalContent>
@@ -187,7 +284,9 @@ const PlanRecommendationPage = () => {
           <ModalBody>
             <VStack spacing={4}>
               <SimpleGrid columns={2} spacing={4}>
-                {recommendedPlaces.map((place, i) => (
+                {recommendedPlaces
+                .filter(p => !plan.days[selectedDayIndex].items.some(i => i.title === p.title))
+                .map((place, i) => (
                   <Box
                     key={i}
                     p={4}

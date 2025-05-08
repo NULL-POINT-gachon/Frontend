@@ -48,8 +48,13 @@ import {
             body,
             { headers: { Authorization: `Bearer ${token}` } }
           );
+          console.log("res", res);
     
           const list = res.data.data.recommendations || [];
+          const tripId = res.data.data.trip_id;
+          console.log("tripId", tripId);
+          setTravelData(prev => ({ ...prev, tripId }));
+          console.log("list", list);
           setRecommendations(list);
         } catch (err) {
           console.error("추천 결과 로딩 실패:", err.response?.data || err);

@@ -20,6 +20,9 @@ import PreferenceSurvey from "./pages/PreferenceSurvey";
 import FinalRecommendation from "./pages/FinalRecommendation";
 import RecommendedPlaceDetail from "./pages/RecommendedPlaceDetail";
 import PlanRecommendationPage from "./pages/PlanRecommendationPage";
+import BlankPanel from "./pages/BlankPanel";
+import PlanDetailPanel from "./pages/PlanDetailPanel";
+import MyPlanLayout from "./pages/MyPlanLayout";
 import FinalRecommendationPage from "./pages/FinalRecommendationPage";
 import PlanDetailPage from "./pages/PlanDetailPage";
 import AdminLoginPage from "./pages/AdminLoginPage";
@@ -126,12 +129,17 @@ function App() {
 
               {/* 전체화면 라우트 */}
               <Route path="/plan" element={<PlanRecommendationPage />} />
-              <Route path="/plan/:region" element={<PrivateRoute><PlanDetailPage /></PrivateRoute>}/>
+              <Route path="/my-plan" element={<MyPlanLayout />}>
+                <Route index element={<BlankPanel />} />          {/* /my-plan */}
+                <Route path=":tripId" element={<PlanDetailPanel />} /> {/* /my-plan/24 */}
+              </Route>
               <Route path="/final-recommendation-page" element={<FinalRecommendationPage />} />
-              <Route
-                path="/my-plan"
-                element={<PrivateRoute><MyPlanPage /></PrivateRoute>}
-/>
+              {/* ✅ 일정 리스트 페이지 */}
+              <Route path="/my-plan" element={<MyPlanPage />} />
+
+                {/* ✅ 일정 상세 페이지 – tripId 숫자 사용 */}
+                <Route path="/my-plan/:tripId" element={<PlanDetailPage />} />
+
                 <Route
                   path="/mypage"
                   element={<PrivateRoute><MyPage /></PrivateRoute>}

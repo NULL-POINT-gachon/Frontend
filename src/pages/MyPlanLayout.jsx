@@ -1,32 +1,28 @@
 import React, { useEffect, useState } from "react";
+import { Outlet, useNavigate, useParams } from "react-router-dom";
 import {
-  Box, Heading, Button, VStack, HStack, Text,
+  Box, HStack, VStack, Heading, Button, Text,
 } from "@chakra-ui/react";
 import Header from "../components/Header";
-import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
-const MyPlanPage = () => {
+export default function MyPlanLayout() {
   const navigate = useNavigate();
+  const { tripId } = useParams();         // 선택된 일정 ID(없을 수도 있음)
   const [trips, setTrips] = useState([]);
 
-  /* 🔹 일정 목록 로딩 */
+  /* 일정 목록 로딩 */
   useEffect(() => {
-    const fetchTrips = async () => {
+    (async () => {
       try {
-        const { data } = await axios.get(
-          "http://localhost:3000/trip/all",
-          { params: { page: 1, limit: 100 } }   // 필요 시 페이징 조정
-        );
+        const { data } = await axios.get("http://localhost:3000/trip/all",
+          { params: { page: 1, limit: 100 } });
         if (data.result_code === 200) setTrips(data.trips);
-      } catch (e) {
-        console.error("일정 목록 불러오기 오류:", e);
-      }
-    };
-    fetchTrips();
+      } catch (e) { console.error(e); }
+    })();
   }, []);
 
-  const goToPlan = (tripId) => navigate(`/my-plan/${tripId}`);
+  const goPlan = (id) => navigate(`/my-plan/${id}`);
 
   return (
     <>
@@ -34,18 +30,18 @@ const MyPlanPage = () => {
       <Box bgGradient="linear(to-b, blue.200, white)" py={10} />
       <Box bg="gray.50" minH="100vh" p={6}>
         <HStack align="start" spacing={6}>
+          {/* ---- 사이드바 ---- */}
           <Box w="260px" bg="blue.100" p={4} borderRadius="md" boxShadow="md">
             <Heading size="md" mb={4}>일정 관리</Heading>
-
             {trips.length === 0 ? (
-              <Text fontSize="sm" color="gray.600">저장된 일정이 없습니다.</Text>
+              <Text fontSize="sm">일정이 없습니다.</Text>
             ) : (
               <VStack align="stretch" spacing={2}>
-                {trips.map((t) => (
+                {trips.map(t => (
                   <Button
                     key={t.식별자}
-                    colorScheme="blue"
-                    onClick={() => goToPlan(t.식별자)}
+                    colorScheme={String(t.식별자) === tripId ? "teal" : "blue"}
+                    onClick={() => goPlan(t.식별자)}
                   >
                     {t.여행일정명}
                   </Button>
@@ -54,11 +50,12 @@ const MyPlanPage = () => {
             )}
           </Box>
 
-          <Box flex="1" /> {/* 오른쪽 공간(지도 등) */}
+          {/* ---- 오른쪽 영역(Outlet) ---- */}
+          <Box flex="1">
+            <Outlet />   {/* BlankPanel 또는 PlanDetailPanel 렌더링 */}
+          </Box>
         </HStack>
       </Box>
     </>
   );
-};
-
-export default MyPlanPage;
+}

@@ -9,6 +9,7 @@ export const TravelProvider = ({ children }) => {
     return saved
       ? JSON.parse(saved)
       : {
+          tripId: null,
           dateRange: [],
           people: null,
           moods: [],

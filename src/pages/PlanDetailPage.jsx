@@ -20,10 +20,10 @@ import InviteModal from "../components/InviteModal";
 import ReviewModal from "../components/ReviewModal";
 import AddScheduleModal from "../components/AddScheduleModal";
 import ScheduleCard from "../components/ScheduleCard";
+import axios from "axios";
 
 const PlanDetailPage = () => {
   const { region } = useParams();
-
   const {
     isOpen: isInviteOpen,
     onOpen: onInviteOpen,

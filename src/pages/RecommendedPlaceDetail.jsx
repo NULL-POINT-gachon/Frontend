@@ -73,7 +73,8 @@ function HotDestinationDetail() {
           companion:   people || 1,
           activity_level:     preference.intensity,
           place_name:         place.title,
-          trip_duration:      tripDuration || 3
+          trip_duration:      tripDuration || 3,
+          trip_id:            travelData.tripId
         }),
       });
   
