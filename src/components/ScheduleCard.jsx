@@ -5,7 +5,7 @@ import { StarIcon } from "@chakra-ui/icons";
 import { DeleteIcon } from "@chakra-ui/icons";
 const ScheduleCard = ({ item, onDelete, onReview }) => {
   return (
-    <Box p={4} borderWidth="1px" borderRadius="md">
+    <Box p={4} borderWidth="1px" borderRadius="md" w="100%">
       <HStack justify="space-between">
         <Text fontWeight="bold">{item.title}</Text>
         <Button variant="ghost" onClick={onReview}>

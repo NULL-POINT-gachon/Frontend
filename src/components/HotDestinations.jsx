@@ -1,5 +1,6 @@
 import React from "react";
-import { hotPlaces } from "../data/hotPlaces";
+import { useEffect, useState } from "react";
+import axios from "axios";
 import Slider from "react-slick";
 import {
   Box,
@@ -15,6 +16,14 @@ import { useNavigate } from "react-router-dom";
 
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
+
+const handleCardClick = (e) => {
+  // slick이 li.slick-slide 에 넣어주는 data-index
+  const idx = Number(e.currentTarget.getAttribute("data-index"));
+  const trueIdx = ((idx % hotPlaces.length) + hotPlaces.length) % hotPlaces.length; // 음수 보정
+  const placeId = hotPlaces[trueIdx].id;
+  navigate(`/hot-destinations/${placeId}`);
+};
 
 // ▶ 커스텀 이전 버튼
 const CustomPrevArrow = ({ onClick }) => (
@@ -51,7 +60,18 @@ const CustomNextArrow = ({ onClick }) => (
 );
 
 const HotDestinations = () => {
+  const [hotPlaces, setHotPlaces] = useState([]);
   const navigate = useNavigate();
+
+  useEffect(()=>{
+       (async()=>{
+         try{
+           const { data } = await axios.get("http://localhost:3000/review/hot-destinations");
+           console.log(data);
+           if(data.result_code===200) setHotPlaces(data.data);
+         }catch(e){ console.error(e); }
+       })();
+     },[]);
 
   const settings = {
     dots: true,
@@ -75,6 +95,9 @@ const HotDestinations = () => {
   return (
     <Box overflow="visible" px={4}>
       <Heading size="lg" mb={6}>🔥 요즘 핫한 여행지</Heading>
+      {hotPlaces.length === 0 ? (
+       <Text color="gray.500">최근 일주일간 인기 여행지가 없습니다.</Text>
+     ) : (
       <Slider {...settings}>
         {hotPlaces.map((place) => (
           <Box
@@ -99,9 +122,8 @@ const HotDestinations = () => {
               />
               <Box>
                 <Text fontWeight="bold" fontSize="lg">{place.title}</Text>
-                <Text fontSize="sm" color="gray.600">{place.description}</Text>
                 <Text fontSize="sm" color="blue.600" mt={1}>
-                평점 {place.rating}
+                   리뷰 {place.review_count} · 평점 {place.rating}
                 </Text>
               </Box>
               <Button
@@ -118,6 +140,7 @@ const HotDestinations = () => {
           </Box>
         ))}
       </Slider>
+      )}
     </Box>
   );
 };

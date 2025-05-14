@@ -6,6 +6,8 @@ import {
 import Header from "../components/Header";
 import axios from "axios";
 import { useAuth } from "../contexts/AuthContext";
+import { DeleteIcon } from "@chakra-ui/icons";   // ↰ 추가
+import { IconButton, ButtonGroup } from "@chakra-ui/react";
 
 export default function MyPlanLayout() {
   const navigate = useNavigate();
@@ -41,13 +43,42 @@ export default function MyPlanLayout() {
             ) : (
               <VStack align="stretch" spacing={2}>
                 {trips.map(t => (
-                  <Button
-                    key={t.식별자}
-                    colorScheme={String(t.식별자) === tripId ? "teal" : "blue"}
-                    onClick={() => goPlan(t.식별자)}
-                  >
-                    {t.여행일정명}
-                  </Button>
+                  <ButtonGroup key={t.식별자} isAttached w="full">
+                    {/* 일정 상세 보기 버튼 */}
+                    <Button
+                      flex="1"
+                      justifyContent="flex-start"
+                      colorScheme={String(t.식별자) === tripId ? "teal" : "blue"}
+                      onClick={() => goPlan(t.식별자)}
+                    >
+                      {t.여행일정명}
+                    </Button>
+                                
+                    {/* 삭제 아이콘 버튼 */}
+                    <IconButton
+                      aria-label="일정 삭제"
+                      icon={<DeleteIcon />}
+                      colorScheme="red"
+                      variant="outline"
+                      onClick={async (e) => {
+                        e.stopPropagation();                    // 부모 버튼 클릭 방지
+                        const ok = window.confirm("정말 삭제하시겠습니까?");
+                        if (!ok) return;
+                      
+                        try {
+                          await axios.delete(
+                            `http://localhost:3000/trip/${t.식별자}`,
+                            { headers: { Authorization: `Bearer ${token}` } }
+                          );
+                          // ↘️ trips 상태에서 제거
+                          setTrips(prev => prev.filter(p => p.식별자 !== t.식별자));
+                        } catch (err) {
+                          console.error(err);
+                          alert("삭제에 실패했습니다.");
+                        }
+                      }}
+                    />
+                  </ButtonGroup>
                 ))}
               </VStack>
             )}

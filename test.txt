@@ -1,1 +1,214 @@
-github test
+create table AI_ErrorLog
+(
+    id              int auto_increment
+        primary key,
+    severity        varchar(10)  not null,
+    error_component varchar(100) not null,
+    error_content   varchar(255) not null,
+    error_status    varchar(20)  not null,
+    error_details   text         null,
+    resolution_time timestamp    null
+);
+
+create table ActivityType
+(
+    id            int auto_increment
+        primary key,
+    activity_name varchar(50) not null
+);
+
+create table Mood
+(
+    id        int auto_increment
+        primary key,
+    mood_name varchar(50) not null
+);
+
+create table Transportation
+(
+    id             int auto_increment
+        primary key,
+    transport_name varchar(50)   not null,
+    speed          decimal(5, 2) null,
+    cost_per_km    decimal(5, 2) null
+);
+
+create table TravelDestination
+(
+    id                      int auto_increment
+        primary key,
+    destination_name        varchar(100)   not null,
+    destination_description text           null,
+    latitude                decimal(10, 8) not null,
+    longitude               decimal(11, 8) not null,
+    category                varchar(50)    null,
+    indoor_outdoor          varchar(20)    null,
+    entrance_fee            decimal(10, 2) null,
+    image                   varchar(255)   null
+);
+
+create table DestinationImage
+(
+    image_id       int auto_increment
+        primary key,
+    destination_id int          not null,
+    image_path     varchar(255) not null,
+    constraint DestinationImage_ibfk_1
+        foreign key (destination_id) references TravelDestination (id)
+);
+
+create index idx_destination_id
+    on DestinationImage (destination_id);
+
+create table User
+(
+    id         int auto_increment
+        primary key,
+    name       varchar(30)                         not null,
+    password   varchar(255)                        not null,
+    email      varchar(100)                        not null,
+    age        int                                 null,
+    gender     varchar(10)                         null,
+    residence  varchar(100)                        null,
+    created_at timestamp default CURRENT_TIMESTAMP null,
+    updated_at timestamp default CURRENT_TIMESTAMP null on update CURRENT_TIMESTAMP,
+    status     int       default 1                 null,
+    constraint email
+        unique (email)
+);
+
+create table Review
+(
+    id             int auto_increment
+        primary key,
+    user_id        int                                 not null,
+    destination_id int                                 not null,
+    rating         int                                 not null,
+    review_content text                                null,
+    created_at     timestamp default CURRENT_TIMESTAMP null,
+    updated_at     timestamp default CURRENT_TIMESTAMP null on update CURRENT_TIMESTAMP,
+    status         int       default 1                 null,
+    constraint unique_user_destination_review
+        unique (user_id, destination_id),
+    constraint Review_ibfk_1
+        foreign key (user_id) references User (id),
+    constraint Review_ibfk_2
+        foreign key (destination_id) references TravelDestination (id)
+);
+
+create index destination_id
+    on Review (destination_id);
+
+create table TravelSchedule
+(
+    id             int auto_increment
+        primary key,
+    user_id        int                                    not null,
+    schedule_name  varchar(100)                           not null,
+    city           varchar(100)                           not null,
+    departure_date date                                   not null,
+    end_date       date                                   not null,
+    travel_status  varchar(255) default 'planned'         null,
+    created_at     datetime     default CURRENT_TIMESTAMP null,
+    updated_at     timestamp    default CURRENT_TIMESTAMP null on update CURRENT_TIMESTAMP,
+    status         varchar(255)                           null,
+    constraint TravelSchedule_ibfk_1
+        foreign key (user_id) references User (id)
+);
+
+create table ScheduleDestination
+(
+    id                    int auto_increment
+        primary key,
+    destination_id        int                                 not null,
+    schedule_id           int                                 not null,
+    transportation_id     int                                 null,
+    visit_order           int                                 null,
+    visit_duration        int                                 null,
+    visit_time            time                                null,
+    travel_distance       float                               null,
+    estimated_travel_time int                                 null,
+    visit_date            timestamp                           null,
+    created_at            timestamp default CURRENT_TIMESTAMP null,
+    updated_at            timestamp default CURRENT_TIMESTAMP null on update CURRENT_TIMESTAMP,
+    constraint unique_schedule_destination
+        unique (destination_id, schedule_id),
+    constraint ScheduleDestination_ibfk_1
+        foreign key (destination_id) references TravelDestination (id),
+    constraint ScheduleDestination_ibfk_2
+        foreign key (schedule_id) references TravelSchedule (id),
+    constraint ScheduleDestination_ibfk_3
+        foreign key (transportation_id) references Transportation (id)
+);
+
+create index idx_schedule_id
+    on ScheduleDestination (schedule_id);
+
+create index transportation_id
+    on ScheduleDestination (transportation_id);
+
+create table ScheduleShare
+(
+    id                int auto_increment
+        primary key,
+    sharing_user_id   int                                    not null,
+    schedule_id       int                                    not null,
+    permission_level  varchar(255) default 'read'            null,
+    invitation_status varchar(255) default 'pending'         null,
+    created_at        timestamp    default CURRENT_TIMESTAMP null,
+    constraint unique_share
+        unique (sharing_user_id, schedule_id),
+    constraint ScheduleShare_ibfk_1
+        foreign key (sharing_user_id) references User (id),
+    constraint ScheduleShare_ibfk_2
+        foreign key (schedule_id) references TravelSchedule (id)
+);
+
+create index schedule_id
+    on ScheduleShare (schedule_id);
+
+create table TravelPreference
+(
+    id                       int auto_increment
+        primary key,
+    schedule_id              int         not null,
+    indoor_outdoor           varchar(20) null,
+    preferred_transportation varchar(50) null,
+    companion_count          int         null,
+    constraint unique_schedule_preference
+        unique (schedule_id),
+    constraint TravelPreference_ibfk_1
+        foreign key (schedule_id) references TravelSchedule (id)
+);
+
+create table PreferenceActivity
+(
+    preference_id int not null,
+    activity_id   int not null,
+    primary key (preference_id, activity_id),
+    constraint PreferenceActivity_ibfk_1
+        foreign key (preference_id) references TravelPreference (id),
+    constraint PreferenceActivity_ibfk_2
+        foreign key (activity_id) references ActivityType (id)
+);
+
+create index activity_id
+    on PreferenceActivity (activity_id);
+
+create table PreferenceMood
+(
+    preference_id int not null,
+    mood_id       int not null,
+    primary key (preference_id, mood_id),
+    constraint PreferenceMood_ibfk_1
+        foreign key (preference_id) references TravelPreference (id),
+    constraint PreferenceMood_ibfk_2
+        foreign key (mood_id) references Mood (id)
+);
+
+create index mood_id
+    on PreferenceMood (mood_id);
+
+create index idx_user_id
+    on TravelSchedule (user_id);
+

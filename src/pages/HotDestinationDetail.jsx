@@ -35,7 +35,8 @@ function HotDestinationDetail() {
           Authorization: `Bearer ${token}`
         }
       });
-      setReviews(res.data.data);
+      const list = Array.isArray(res.data.data) ? res.data.data : [];
+      setReviews(list);
     } catch (err) {
       toast({ title: "리뷰 불러오기 실패", status: "error" });
     }
@@ -115,7 +116,7 @@ function HotDestinationDetail() {
         </Box>
 
         <Box flex={1}>
-          <Heading size="sm" mb={2}>리뷰 작성 <Text as="span" color="gray.500">({reviews.length})</Text></Heading>
+          <Heading size="sm" mb={2}>리뷰 작성 <Text as="span" color="gray.500">({Array.isArray(reviews) ? reviews.length : 0})</Text></Heading>
 
           <Box bg="blue.50" p={4} borderRadius="md" mb={6}>
             <HStack spacing={1} mb={2}>
@@ -140,7 +141,7 @@ function HotDestinationDetail() {
           </Box>
 
           <VStack align="stretch" spacing={4}>
-            {reviews.map((rev) => (
+            {Array.isArray(reviews) && reviews.map((rev) => (
               <Box key={rev.id} p={3} borderWidth="1px" borderRadius="md">
                 <HStack spacing={1}>
                   {[1, 2, 3, 4, 5].map((i) => (

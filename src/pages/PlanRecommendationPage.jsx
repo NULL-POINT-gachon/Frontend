@@ -38,6 +38,30 @@ const PlanRecommendationPage = () => {
   console.log("tripId", tripId);
 
   useEffect(() => {
+    const recommended = location.state?.recommended || [];
+    setRecommendedPlaces(recommended);
+    console.log("recommended", recommended);
+  
+    const receivedPlan = location.state?.plan;
+  
+    if (receivedPlan?.days?.length) {
+      const daysWithNumber = receivedPlan.days.map((day, idx) => ({
+        day: day.day || (idx + 1),
+        items: day.items || [],
+      }));
+      setPlan({ days: daysWithNumber });
+    } else {
+      setPlan({
+        days: [
+          { day: 1, items: [] },
+          { day: 2, items: [] },
+          { day: 3, items: [] }
+        ]
+      });
+    }
+  }, [location]);
+
+  useEffect(() => {
     // 👉 추천 장소
     const initial = location.state?.recommended || [];   // [] fallback
     setRecommendedPlaces(initial);
@@ -181,7 +205,7 @@ const PlanRecommendationPage = () => {
           </Tabs>
 
           <Button leftIcon={<AddIcon />} mt={4} w="full" onClick={onOpen} colorScheme="teal" variant="outline">
-            장소에서 일정 추가하기
+            일정 추가 / 제거
           </Button>
           <Button mt={4} colorScheme="blue" w="full" onClick={optimizeRoute}>
             🚗 최적 동선 보기

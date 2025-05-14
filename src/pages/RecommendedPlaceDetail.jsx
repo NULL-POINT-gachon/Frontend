@@ -42,7 +42,24 @@ function HotDestinationDetail() {
   const handleCreatePlan = async () => {
     try {
       /* ---------- 1. 필요 데이터 꺼내기 ---------- */
-      const { selectedCity, people, moods, tripDuration, preference } = travelData;
+      const { selectedCity, people, moods, preference } = travelData;
+      const [startIso, endIso] = travelData.dateRange;
+
+      // 1) 문자열 → Date 객체
+      const start = new Date(startIso);
+      const end   = new Date(endIso);
+
+      // 2) 시·분·초를 0으로 맞춰서 ‘날짜 단위’만 비교
+      start.setHours(0, 0, 0, 0);
+      end.setHours(0, 0, 0, 0);
+
+      // 3) 차이를 ‘일’로 환산 (+1 : 첫날 포함)
+      const MS_PER_DAY   = 86_400_000;          // 24*60*60*1000
+      const tripDuration =
+      Math.round((end - start) / MS_PER_DAY) + 1;
+      
+      console.log('tripDuration', tripDuration)
+
   
       // 활동 ID 매핑 (예시)
       const ACTIVITY_ID = {
@@ -83,6 +100,7 @@ function HotDestinationDetail() {
       const result = await res.json();
   
       if (res.ok) {
+        console.log("result", result);
         navigate("/plan", { state: { plan: result.data } });
       } else {
         toast({
