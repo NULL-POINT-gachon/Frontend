@@ -1,4 +1,4 @@
-// src/components/admin/places/EditPlaceDetailModal.jsx
+// src/components/admin/places/EditPlaceModal.jsx
 import React, { useState, useEffect } from "react";
 import {
   Modal,
@@ -66,7 +66,7 @@ const EditPlaceModal = ({ isOpen, onClose, place, onSave }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    
+
     // 필수 필드 검증
     if (!formData.destination_name || !formData.address || !formData.category) {
       toast({
@@ -79,7 +79,6 @@ const EditPlaceModal = ({ isOpen, onClose, place, onSave }) => {
       return;
     }
 
-    // 위도/경도 숫자 검증
     if (formData.latitude && isNaN(formData.latitude)) {
       toast({
         title: "위도 형식 오류",
@@ -102,10 +101,23 @@ const EditPlaceModal = ({ isOpen, onClose, place, onSave }) => {
       return;
     }
 
-    onSave({
-      ...formData,
-      id: place?.id,
-    });
+    try {
+      const updated = {
+        ...formData,
+        id: place?.id,
+      };
+
+      onSave(updated); // 부모 컴포넌트에서 axios 처리 및 fetch 수행
+      onClose();       // 모달 닫기
+    } catch (error) {
+      toast({
+        title: "처리 실패",
+        description: "처리 중 오류가 발생했습니다.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
   };
 
   return (

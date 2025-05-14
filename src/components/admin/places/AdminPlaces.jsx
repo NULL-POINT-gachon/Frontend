@@ -1,4 +1,3 @@
-// src/components/admin/places/AdminPlaces.jsx
 import React, { useEffect, useState, useRef } from "react";
 import {
   Box,
@@ -42,7 +41,7 @@ const AdminPlaces = () => {
 
   const fetchPlaces = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem("token");
       if (!token) {
         toast({
           title: "로그인이 필요합니다",
@@ -51,45 +50,31 @@ const AdminPlaces = () => {
           duration: 3000,
           isClosable: true,
         });
-        navigate('/login');
+        navigate("/login");
         return;
       }
 
-      const response = await axios.get('http://localhost:3000/admin/destinations', {
+      const response = await axios.get("http://localhost:3000/admin/destinations", {
         headers: {
-          Authorization: `Bearer ${token}`
-        }
+          Authorization: `Bearer ${token}`,
+        },
       });
 
       if (response.data.success) {
         setPlaces(response.data.data);
+      } else {
+        throw new Error("데이터 수신 실패");
       }
     } catch (error) {
       console.error("여행지 목록 가져오기 오류:", error);
       setError(true);
-      
-      if (error.response) {
-        if (error.response.status === 401) {
-          toast({
-            title: "인증 오류",
-            description: "로그인이 만료되었습니다. 다시 로그인해주세요.",
-            status: "error",
-            duration: 3000,
-            isClosable: true,
-          });
-          localStorage.removeItem('token');
-          navigate('/login');
-        } else if (error.response.status === 403) {
-          toast({
-            title: "권한 없음",
-            description: "관리자 권한이 필요합니다.",
-            status: "error",
-            duration: 3000,
-            isClosable: true,
-          });
-          navigate('/');
-        }
-      }
+      toast({
+        title: "오류 발생",
+        description: error.message || "처리 중 오류가 발생했습니다.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
     }
   };
 
@@ -104,50 +89,52 @@ const AdminPlaces = () => {
 
   const handleSave = async (updated) => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem("token");
+      const updatedData = {
+        ...updated,
+        admission_fee: updated.admission_fee || 0, // 기본값 처리 (필요 시)
+      };
+
+      let response;
       if (updated.id) {
-        // 수정
-        await axios.patch(
+        response = await axios.patch(
           `http://localhost:3000/admin/destinations/${updated.id}`,
-          updated,
+          updatedData,
           {
             headers: {
-              Authorization: `Bearer ${token}`
-            }
+              Authorization: `Bearer ${token}`,
+            },
           }
         );
-        toast({
-          title: "수정 성공",
-          description: "여행지 정보가 수정되었습니다.",
-          status: "success",
-          duration: 3000,
-          isClosable: true,
-        });
       } else {
-        // 새로 등록
-        await axios.post(
-          'http://localhost:3000/admin/destinations',
-          updated,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`
-            }
-          }
-        );
-        toast({
-          title: "등록 성공",
-          description: "새 여행지가 등록되었습니다.",
-          status: "success",
-          duration: 3000,
-          isClosable: true,
+        response = await axios.post("http://localhost:3000/admin/destinations", updatedData, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         });
       }
-      fetchPlaces(); // 목록 새로고침
-      onClose();
+
+      if (response.data.success) {
+        toast({
+          title: updated.id ? "수정 완료" : "등록 완료",
+          description: updated.id
+            ? "여행지 정보가 성공적으로 수정되었습니다."
+            : "새 여행지가 등록되었습니다.",
+          status: "success",
+          duration: 3000,
+          isClosable: true,
+        });
+        onClose();
+        setSelectedPlace(null);
+        await fetchPlaces();
+      } else {
+        throw new Error(response.data.message || "요청 실패");
+      }
     } catch (error) {
+      console.error("저장 중 오류:", error);
       toast({
         title: "오류 발생",
-        description: error.response?.data?.message || "처리 중 오류가 발생했습니다.",
+        description: error.message || "처리 중 오류가 발생했습니다.",
         status: "error",
         duration: 3000,
         isClosable: true,
@@ -157,16 +144,13 @@ const AdminPlaces = () => {
 
   const handleConfirmDelete = async () => {
     try {
-      const token = localStorage.getItem('token');
-      await axios.delete(
-        `http://localhost:3000/admin/destinations/${targetId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        }
-      );
-      
+      const token = localStorage.getItem("token");
+      await axios.delete(`http://localhost:3000/admin/destinations/${targetId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
       toast({
         title: "삭제 성공",
         description: "여행지가 삭제되었습니다.",
@@ -174,8 +158,8 @@ const AdminPlaces = () => {
         duration: 3000,
         isClosable: true,
       });
-      
-      fetchPlaces(); // 목록 새로고침
+
+      await fetchPlaces();
     } catch (error) {
       toast({
         title: "삭제 실패",
@@ -191,10 +175,10 @@ const AdminPlaces = () => {
   const filtered = places
     .filter((p) => {
       return (
-        (p.status !== 0) && // 비활성 상태가 아닌 경우만 표시
+        p.status !== 0 &&
         (p.name?.includes(searchTerm) ||
-        p.description?.includes(searchTerm) ||
-        p.category?.includes(searchTerm))
+          p.description?.includes(searchTerm) ||
+          p.category?.includes(searchTerm))
       );
     })
     .sort((a, b) => {
@@ -252,15 +236,19 @@ const AdminPlaces = () => {
                 </Td>
                 <Td>{place.category}</Td>
                 <Td>{place.indoor_outdoor}</Td>
-                <Td>{place.admission_fee ? `${place.admission_fee}원` : '무료'}</Td>
+                <Td>{place.admission_fee ? `${place.admission_fee}원` : "무료"}</Td>
                 <Td>
                   <Button size="sm" colorScheme="blue" mr={2} onClick={() => handleEdit(place)}>
                     수정
                   </Button>
-                  <Button size="sm" colorScheme="red" onClick={() => {
-                    setTargetId(place.id);
-                    setIsDeleteOpen(true);
-                  }}>
+                  <Button
+                    size="sm"
+                    colorScheme="red"
+                    onClick={() => {
+                      setTargetId(place.id);
+                      setIsDeleteOpen(true);
+                    }}
+                  >
                     삭제
                   </Button>
                 </Td>

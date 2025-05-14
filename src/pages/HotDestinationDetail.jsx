@@ -1,3 +1,4 @@
+// src/pages/HotDestinationDetail.jsx
 import React, { useState, useEffect } from "react";
 import {
   Box, Image, Text, Heading, Badge, VStack, HStack,
@@ -5,7 +6,7 @@ import {
 } from "@chakra-ui/react";
 import { useParams } from "react-router-dom";
 import { StarIcon } from "@chakra-ui/icons";
-import { hotPlaces } from "../data/hotPlaces";
+import axios from "axios";
 
 function HotDestinationDetail() {
   const { id } = useParams();
@@ -16,57 +17,85 @@ function HotDestinationDetail() {
   const [editingId, setEditingId] = useState(null);
   const [editedText, setEditedText] = useState("");
   const [editedRating, setEditedRating] = useState(0);
+  const [reviews, setReviews] = useState([]);
 
-  const currentUser = { id: 1, name: "guest" }; // 추후 useAuth에서 가져올 수 있음
+  const currentUser = { id: 1, name: "guest" }; // 임시 유저 ID
 
-  const [reviews, setReviews] = useState([
-    {
-      id: 1,
-      user: { id: 1, name: "사용자1" },
-      content: "여기 이쁘구재밌구 너무 좋아요~",
-      rating: 5,
-      createdAt: "2025-05-08"
-    },
-    {
-      id: 2,
-      user: { id: 2, name: "test1" },
-      content: "여기 이쁘구재밌구 너무 좋아요~",
-      rating: 4,
-      createdAt: "2025-05-08"
-    },
-  ]);
-
+  // 여행지 정보는 목업이거나 백엔드 연결 시 여기서 가져오도록
   useEffect(() => {
-    const matched = hotPlaces.find((p) => p.id === Number(id));
-    if (matched) setPlace(matched);
+    // 예시: 백엔드에서 place 정보도 가져올 수 있다면 여기에 추가
+    fetchReviews();
   }, [id]);
+
+  const fetchReviews = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.get(`http://localhost:3000/review/place/${id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      setReviews(res.data.data);
+    } catch (err) {
+      toast({ title: "리뷰 불러오기 실패", status: "error" });
+    }
+  };
 
   const createReview = async () => {
     if (!reviewText || rating === 0) {
-      toast({ title: "별점과 후기를 입력해주세요.", status: "warning", duration: 2000, isClosable: true });
+      toast({ title: "별점과 후기를 입력해주세요.", status: "warning" });
       return;
     }
-    const newReview = {
-      id: Date.now(),
-      user: currentUser,
-      content: reviewText,
-      rating,
-      createdAt: new Date().toLocaleDateString(),
-    };
-    setReviews([newReview, ...reviews]);
-    setReviewText("");
-    setRating(0);
+    try {
+      const token = localStorage.getItem("token");
+      await axios.post("http://localhost:3000/review", {
+        destination_id: Number(id),
+        rating,
+        content: reviewText
+      }, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      toast({ title: "리뷰 등록 완료", status: "success" });
+      setReviewText("");
+      setRating(0);
+      fetchReviews();
+    } catch (err) {
+      toast({ title: "등록 실패", description: err.response?.data?.message || "오류 발생", status: "error" });
+    }
   };
 
-  const updateReview = async (id) => {
-    setReviews(reviews.map((r) => r.id === id ? { ...r, content: editedText, rating: editedRating } : r));
-    setEditingId(null);
-    setEditedText("");
-    setEditedRating(0);
+  const updateReview = async (reviewId) => {
+    try {
+      const token = localStorage.getItem("token");
+      await axios.put(`http://localhost:3000/review/${reviewId}`, {
+        rating: editedRating,
+        content: editedText
+      }, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      toast({ title: "리뷰 수정 완료", status: "success" });
+      setEditingId(null);
+      fetchReviews();
+    } catch (err) {
+      toast({ title: "수정 실패", status: "error" });
+    }
   };
 
-  const deleteReview = async (id) => {
-    setReviews(reviews.filter((r) => r.id !== id));
+  const deleteReview = async (reviewId) => {
+    try {
+      const token = localStorage.getItem("token");
+      await axios.delete(`http://localhost:3000/review/${reviewId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast({ title: "리뷰 삭제 완료", status: "success" });
+      fetchReviews();
+    } catch (err) {
+      toast({ title: "삭제 실패", status: "error" });
+    }
   };
 
   const handleEdit = (review) => {
@@ -75,24 +104,18 @@ function HotDestinationDetail() {
     setEditedRating(review.rating);
   };
 
-  if (!place) return <Text>여행지를 불러오는 중입니다...</Text>;
-
   return (
     <Box px={10} py={8}>
       <Flex gap={10} maxW="1000px" mx="auto" align="start">
-        <Box bg="white" borderRadius="lg" boxShadow="md" overflow="hidden" w="300px">
-          <Image src={place.image} alt={place.title} w="100%" h="200px" objectFit="cover" />
+        <Box bg="white" borderRadius="lg" boxShadow="md" w="300px">
           <Box p={4}>
             <Text fontSize="xs" color="purple.600" fontWeight="bold">TOP 1</Text>
-            <Text fontWeight="bold" fontSize="lg">{place.title}</Text>
-            <Text fontSize="sm" color="gray.600">{place.description}</Text>
-            <Text fontSize="sm" color="blue.600" mt={1}>★ {place.rating.toFixed(1)} ({place.reviews?.toLocaleString() || 0})</Text>
+            <Text fontWeight="bold" fontSize="lg">여행지 #{id}</Text>
           </Box>
         </Box>
 
         <Box flex={1}>
-          <Text color="gray.600" mb={2}>{place.description.repeat(2)}</Text>
-          <Heading size="sm" mb={2}>#여행지_느낌표 <Text as="span" color="gray.500"> {reviews.length}</Text></Heading>
+          <Heading size="sm" mb={2}>리뷰 작성 <Text as="span" color="gray.500">({reviews.length})</Text></Heading>
 
           <Box bg="blue.50" p={4} borderRadius="md" mb={6}>
             <HStack spacing={1} mb={2}>
@@ -108,7 +131,7 @@ function HotDestinationDetail() {
               ))}
             </HStack>
             <Textarea
-              placeholder="여행지에 대한 느낌을 자유롭게 남겨주세요."
+              placeholder="후기를 입력하세요."
               value={reviewText}
               onChange={(e) => setReviewText(e.target.value)}
               mb={2}
@@ -118,7 +141,7 @@ function HotDestinationDetail() {
 
           <VStack align="stretch" spacing={4}>
             {reviews.map((rev) => (
-              <Box key={rev.id}>
+              <Box key={rev.id} p={3} borderWidth="1px" borderRadius="md">
                 <HStack spacing={1}>
                   {[1, 2, 3, 4, 5].map((i) => (
                     <StarIcon
@@ -138,20 +161,19 @@ function HotDestinationDetail() {
                       onChange={(e) => setEditedText(e.target.value)}
                       mt={1}
                     />
-                    <HStack spacing={2} mt={1}>
-                      <Text fontSize="xs" color="gray.500">{rev.user.name}</Text>
+                    <HStack mt={1}>
                       <Button size="xs" colorScheme="blue" onClick={() => updateReview(rev.id)}>저장</Button>
                       <Button size="xs" onClick={() => setEditingId(null)}>취소</Button>
                     </HStack>
                   </>
                 ) : (
                   <>
-                    <Text fontSize="sm" mt={1}>{rev.content}</Text>
-                    <HStack spacing={2} mt={1}>
-                      <Text fontSize="xs" color="gray.500">{rev.user.name}</Text>
-                      {rev.user.id === currentUser.id && (
+                    <Text mt={1}>{rev.content}</Text>
+                    <HStack mt={1}>
+                      <Text fontSize="xs" color="gray.500">{rev.user?.name || "작성자"}</Text>
+                      {rev.user?.id === currentUser.id && (
                         <>
-                          <Button size="xs" colorScheme="gray" variant="outline" onClick={() => handleEdit(rev)}>수정</Button>
+                          <Button size="xs" onClick={() => handleEdit(rev)}>수정</Button>
                           <Button size="xs" colorScheme="red" onClick={() => deleteReview(rev.id)}>삭제</Button>
                         </>
                       )}

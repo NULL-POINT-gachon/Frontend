@@ -25,13 +25,13 @@ const ReviewModal = ({
   onEditReview,
   onDeleteReview,
 }) => {
-  const [reviewText, setReviewText] = useState("");
+  const [content, setContent] = useState("");
   const [rating, setRating] = useState(5);
   const [editId, setEditId] = useState(null);
   const toast = useToast();
 
   const handleSubmit = () => {
-    if (!reviewText.trim()) {
+    if (!content.trim()) {
       toast({
         title: "리뷰 내용을 입력해주세요.",
         status: "warning",
@@ -42,9 +42,9 @@ const ReviewModal = ({
     }
 
     const payload = {
-      id: editId || Date.now(),
-      text: reviewText,
+      content,
       rating,
+      ...(editId ? { id: editId } : {}),
     };
 
     if (editId) {
@@ -57,14 +57,14 @@ const ReviewModal = ({
   };
 
   const resetForm = () => {
-    setReviewText("");
+    setContent("");
     setRating(5);
     setEditId(null);
   };
 
   const handleEditClick = (review) => {
     setEditId(review.id);
-    setReviewText(review.text);
+    setContent(review.content);
     setRating(review.rating);
   };
 
@@ -99,18 +99,18 @@ const ReviewModal = ({
             </HStack>
             <Textarea
               placeholder="리뷰를 작성하세요."
-              value={reviewText}
-              onChange={(e) => setReviewText(e.target.value)}
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
             />
             <Button colorScheme="blue" onClick={handleSubmit}>
               {editId ? "수정 완료" : "등록"}
             </Button>
 
-            {reviews.length > 0 && (
+            {Array.isArray(reviews) && reviews.length > 0 && (
               <>
                 <Text fontWeight="bold">작성된 리뷰</Text>
                 <VStack spacing={3} align="stretch">
-                  {reviews.map((r) => (
+                  {reviews.filter(r => r && r.id).map((r) => (
                     <HStack
                       key={r.id}
                       justify="space-between"
@@ -122,7 +122,7 @@ const ReviewModal = ({
                         {[...Array(r.rating)].map((_, i) => (
                           <StarIcon key={i} color="yellow.400" />
                         ))}
-                        <Text ml={2}>{r.text}</Text>
+                        <Text ml={2}>{r.content}</Text>
                       </HStack>
                       <HStack>
                         <IconButton
