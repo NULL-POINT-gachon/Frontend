@@ -14,6 +14,7 @@ import {
   Text,
   IconButton,
   useToast,
+  Badge,
 } from "@chakra-ui/react";
 import { StarIcon, DeleteIcon, EditIcon } from "@chakra-ui/icons";
 
@@ -25,13 +26,13 @@ const ReviewModal = ({
   onEditReview,
   onDeleteReview,
 }) => {
-  const [content, setContent] = useState("");
+  const [reviewText, setReviewText] = useState("");
   const [rating, setRating] = useState(5);
   const [editId, setEditId] = useState(null);
   const toast = useToast();
 
   const handleSubmit = () => {
-    if (!content.trim()) {
+    if (!reviewText.trim()) {
       toast({
         title: "리뷰 내용을 입력해주세요.",
         status: "warning",
@@ -42,9 +43,9 @@ const ReviewModal = ({
     }
 
     const payload = {
-      content,
+      id: editId || Date.now(),
+      content: reviewText,
       rating,
-      ...(editId ? { id: editId } : {}),
     };
 
     if (editId) {
@@ -57,14 +58,15 @@ const ReviewModal = ({
   };
 
   const resetForm = () => {
-    setContent("");
+    setReviewText("");
     setRating(5);
     setEditId(null);
   };
 
   const handleEditClick = (review) => {
     setEditId(review.id);
-    setContent(review.content);
+    // 백엔드에서 오는 필드명에 맞춰 조정
+    setReviewText(review.review_content || review.content);
     setRating(review.rating);
   };
 
@@ -99,46 +101,71 @@ const ReviewModal = ({
             </HStack>
             <Textarea
               placeholder="리뷰를 작성하세요."
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
+              value={reviewText}
+              onChange={(e) => setReviewText(e.target.value)}
             />
             <Button colorScheme="blue" onClick={handleSubmit}>
               {editId ? "수정 완료" : "등록"}
             </Button>
 
-            {Array.isArray(reviews) && reviews.length > 0 && (
+            {reviews.length > 0 && (
               <>
                 <Text fontWeight="bold">작성된 리뷰</Text>
                 <VStack spacing={3} align="stretch">
-                  {reviews.filter(r => r && r.id).map((r) => (
+                  {reviews.map((r) => (
                     <HStack
                       key={r.id}
                       justify="space-between"
-                      p={2}
+                      p={3}
                       borderWidth="1px"
                       borderRadius="md"
+                      bg={r.is_my_review ? "blue.50" : "white"}
+                      borderColor={r.is_my_review ? "blue.200" : "gray.200"}
                     >
-                      <HStack>
-                        {[...Array(r.rating)].map((_, i) => (
-                          <StarIcon key={i} color="yellow.400" />
-                        ))}
-                        <Text ml={2}>{r.content}</Text>
-                      </HStack>
-                      <HStack>
-                        <IconButton
-                          icon={<EditIcon />}
-                          size="sm"
-                          aria-label="수정"
-                          onClick={() => handleEditClick(r)}
-                        />
-                        <IconButton
-                          icon={<DeleteIcon />}
-                          size="sm"
-                          colorScheme="red"
-                          aria-label="삭제"
-                          onClick={() => handleDeleteClick(r.id)}
-                        />
-                      </HStack>
+                      <VStack align="start" spacing={1} flex="1">
+                        {/* 내 리뷰 표시 */}
+                        {r.is_my_review && (
+                          <Badge colorScheme="blue" size="sm">
+                            내 리뷰
+                          </Badge>
+                        )}
+                        
+                        {/* 작성자명 표시 (다른 사람 리뷰일 때만) */}
+                        {!r.is_my_review && r.user_name && (
+                          <Text fontSize="sm" color="gray.600">
+                            {r.user_name}
+                          </Text>
+                        )}
+                        
+                        {/* 별점 */}
+                        <HStack>
+                          {[...Array(r.rating)].map((_, i) => (
+                            <StarIcon key={i} color="yellow.400" boxSize={4} />
+                          ))}
+                        </HStack>
+                        
+                        {/* 리뷰 내용 */}
+                        <Text>{r.review_content || r.content}</Text>
+                      </VStack>
+                      
+                      {/* 내 리뷰일 때만 수정/삭제 버튼 표시 */}
+                      {r.is_my_review && (
+                        <HStack>
+                          <IconButton
+                            icon={<EditIcon />}
+                            size="sm"
+                            aria-label="수정"
+                            onClick={() => handleEditClick(r)}
+                          />
+                          <IconButton
+                            icon={<DeleteIcon />}
+                            size="sm"
+                            colorScheme="red"
+                            aria-label="삭제"
+                            onClick={() => handleDeleteClick(r.id)}
+                          />
+                        </HStack>
+                      )}
                     </HStack>
                   ))}
                 </VStack>
