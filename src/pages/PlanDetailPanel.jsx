@@ -28,6 +28,30 @@ export default function PlanDetailPanel() {
   const dates                   = plan.days.map(d => d.date);   // ["2025-05-09", …]
   const DEMO_MODE = false;
 
+  // 상태 추가
+const [reviewedDestinations, setReviewedDestinations] = useState(new Set());
+
+// 컴포넌트 마운트 시 사용자의 리뷰 작성 여행지 목록 가져오기
+useEffect(() => {
+  const fetchUserReviews = async () => {
+    try {
+      const { data } = await axios.get(
+        'http://localhost:3000/review/user-reviews',
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      // 리뷰가 있는 여행지명만 추출하여 Set에 저장
+      const reviewedNames = new Set(data.data.map(review => review.destination_name));
+      setReviewedDestinations(reviewedNames);
+    } catch (err) {
+      console.error('사용자 리뷰 조회 실패:', err);
+    }
+  };
+
+  if (token) {
+    fetchUserReviews();
+  }
+}, [token]);
+
   const deleteSchedule = async (dateKey, sdId) => {
     // 1) 현재 날짜의 day·item 찾기
     const dayObj   = plan.days.find(d => d.date === dateKey);
@@ -203,6 +227,10 @@ const addSchedule = async (dateKey, item) => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setReviews(prev => [...prev, res.data.data]);
+
+      const destinationName = curPlace.destination_name ?? curPlace.title;
+      setReviewedDestinations(prev => new Set([...prev, destinationName]));
+
     } catch (e) { console.error(e); }
   };
 
@@ -223,7 +251,22 @@ const addSchedule = async (dateKey, item) => {
         `http://localhost:3000/review/${id}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
+
+      const deletedReview = reviews.find(r => r.id === id);
+
       setReviews(prev => prev.filter(r => r.id !== id));
+          if (deletedReview) {
+      const remainingReviews = reviews.filter(r => 
+        r.id !== id && r.destination_name === deletedReview.destination_name
+      );
+      if (remainingReviews.length === 0) {
+        setReviewedDestinations(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(deletedReview.destination_name);
+          return newSet;
+        });
+      }
+    }
     } catch (e) { console.error(e); }
   };
 
@@ -288,6 +331,7 @@ const addSchedule = async (dateKey, item) => {
                                 fetchReviews(it.destinationId ?? it.id);
                                 reviewModal.onOpen();
                               }}
+                              hasReview={reviewedDestinations.has(it.title)}
                             />
                           </Flex>
                         )}
