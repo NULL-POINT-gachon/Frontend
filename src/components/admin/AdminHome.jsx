@@ -1,238 +1,217 @@
+// src/components/admin/AdminHome.jsx
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import {
   Box, SimpleGrid, Card, CardHeader, CardBody, Heading, Text,
-  Badge, VStack, HStack, Flex
+  Badge, VStack, HStack, Spinner, useToast
 } from "@chakra-ui/react";
 import {
   UserIcon, MapPinIcon, MessageSquareIcon, CalendarIcon,
-  BarChart3Icon, PieChartIcon, BellIcon
+  BarChart3Icon, PieChartIcon, BellIcon, MessageSquareIcon as QIcon
 } from "lucide-react";
 import {
   BarChart, Bar, PieChart, Pie, Cell,
   Tooltip, ResponsiveContainer, XAxis, YAxis, Legend
 } from "recharts";
 import { useNavigate } from "react-router-dom";
-import { dummyQnaList } from "./dummyQna"; // 실제 위치에 맞게 경로 조정
 
 const COLORS = ["#3182CE", "#38B2AC", "#DD6B20", "#805AD5"];
 
-const AdminHome = () => {
+export default function AdminHome () {
+  /* ────────── state ────────── */
+  const [loading, setLoading]   = useState(true);
+  const [cards,   setCards]     = useState({});   // users / places / reviews / schedules
+  const [pieData, setPieData]   = useState([]);   // ‘무드’ 통계
+  const [notices, setNotices]   = useState([]);   // 최신 공지
+  const [qna,     setQna]       = useState([]);   // 최신 QnA
+
+  const toast    = useToast();
   const navigate = useNavigate();
 
-  // 상태 정의
-  const [stats, setStats] = useState([]);
-  const [barData, setBarData] = useState([]);
-  const [pieData, setPieData] = useState([]);
-  const [increaseData, setIncreaseData] = useState([]);
-  const [notices, setNotices] = useState([]);
-  const [qnaList, setQnaList] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  // 데이터 로딩
+  /* ────────── fetch once ────────── */
   useEffect(() => {
-    const fetchDashboardData = async () => {
+    (async () => {
       try {
-        // TODO: 실제 백엔드 API가 생기면 여기에 연결
-        // const res = await axios.get("/api/admin/dashboard");
+        const token = localStorage.getItem("token");          // AdminAuthProvider 가 저장
+        if (!token) throw new Error("no admin token");
 
-        // 임시 더미 데이터
-        setStats([
-          { icon: <UserIcon size={18} />, label: "총 회원 수", value: 120 },
-          { icon: <MapPinIcon size={18} />, label: "여행지 수", value: 32 },
-          { icon: <MessageSquareIcon size={18} />, label: "리뷰 수", value: 87 },
-          { icon: <CalendarIcon size={18} />, label: "일정 수", value: 45 },
-        ]);
+        const { data } = await axios.get(
+          "http://localhost:3000/admin/summary",
+          { headers:{ Authorization:`Bearer ${token}` } }
+        );
 
-        setBarData([
-          { name: "회원", count: 120 },
-          { name: "여행지", count: 32 },
-          { name: "리뷰", count: 87 },
-          { name: "일정", count: 45 },
-        ]);
+        /**  expected :
+         *  data = {
+         *    result_code: 200,
+         *    data : {
+         *      cards         : { users:##, places:##, reviews:##, schedules:## },
+         *      pieMood       : [ { name:'힐링', value:40 }, … ],
+         *      latestNotices : [ { id, title, created_at }, … ],
+         *      latestQna     : [ { id, question, created_at, answered }, … ]
+         *    }
+         *  }
+         */
+        if (data.result_code !== 200) throw new Error("bad result_code");
 
-        setPieData([
-          { name: "힐링", value: 40 },
-          { name: "먹방", value: 25 },
-          { name: "액티비티", value: 20 },
-          { name: "기타", value: 15 },
-        ]);
+        const { cards, pieMood, latestNotices, latestQna } = data.data;
+        setCards(cards ?? {});
+        setPieData(pieMood ?? []);
+        setNotices(latestNotices ?? []);
+        setQna(latestQna ?? []);
 
-        setIncreaseData([
-          { name: "회원", amount: 12 },
-          { name: "여행지", amount: 5 },
-          { name: "리뷰", amount: 18 },
-          { name: "일정", amount: 7 },
-        ]);
-
-        setNotices([
-          { id: 1, title: "[점검] 4월 5일 서버 점검 예정", date: "2025-03-29" },
-          { id: 2, title: "새로운 테마 여행지 추가", date: "2025-03-27" },
-        ]);
-
-        setQnaList([
-          { id: 1, question: "비밀번호를 잊어버렸어요.", date: "2025-03-25", answered: true },
-          { id: 2, question: "여행 일정은 몇 개까지 등록 가능한가요?", date: "2025-03-26", answered: false },
-        ]);
       } catch (err) {
-        console.error("대시보드 데이터 불러오기 실패", err);
+        console.error(err);
+        toast({ title:"대시보드 로드 실패", status:"error" });
       } finally {
         setLoading(false);
       }
-    };
+    })();
+  }, [toast]);
 
-    fetchDashboardData();
-  }, []);
+  if (loading) return <Spinner size="lg" mt={10} ml={10} />;
 
-  // 로딩 처리
-  if (loading) {
-    return <Text textAlign="center">대시보드 데이터를 불러오는 중입니다...</Text>;
-  }
+  /* ────────── derived data ────────── */
+  const cardMeta = [
+    { key:"users"    , icon:<UserIcon size={18}/>,          label:"총 회원 수" },
+    { key:"places"   , icon:<MapPinIcon size={18}/>,        label:"여행지 수" },
+    { key:"reviews"  , icon:<MessageSquareIcon size={18}/>, label:"리뷰 수"   },
+    { key:"schedules", icon:<CalendarIcon size={18}/>,      label:"일정 수"   }
+  ];
 
+  /* 바 차트용 */
+  const barData = cardMeta.map(m => ({
+    name : m.label.replace(" 총",""),
+    count: cards[m.key] ?? 0
+  }));
+
+  /* 증가량은 아직 API 없음 → 0 으로 */
+  const incData = cardMeta.map(m => ({
+    name  : m.label.replace(" 총",""),
+    amount: 0
+  }));
+
+  /* ────────── render ────────── */
   return (
     <Box p={6}>
       <Heading size="lg" mb={6}>관리자 대시보드</Heading>
 
-      {/* 통계 카드 */}
-      <SimpleGrid columns={{ base: 1, md: 2, lg: 4 }} spacing={4} mb={8}>
-        {stats.map((item, idx) => (
-          <Card key={idx} boxShadow="sm">
+      {/* ■ 카드 4개 */}
+      <SimpleGrid columns={{ base:1, md:2, lg:4 }} spacing={4} mb={8}>
+        {cardMeta.map(meta => (
+          <Card key={meta.key} shadow="sm">
             <CardHeader display="flex" alignItems="center" gap={2}>
-              {item.icon}
-              <Text fontWeight="bold">{item.label}</Text>
+              {meta.icon}
+              <Text fontWeight="bold">{meta.label}</Text>
             </CardHeader>
             <CardBody>
-              <Heading size="md">{item.value}</Heading>
+              <Heading size="md">{cards[meta.key] ?? 0}</Heading>
               <Text fontSize="sm" color="gray.500">이번 달 기준</Text>
             </CardBody>
           </Card>
         ))}
       </SimpleGrid>
 
-      {/* 증감, 공지, QnA 카드 */}
-      <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6} mb={8}>
-        {/* 이번 달 증가량 */}
+      {/* ■ 증가량 · 공지 · QnA */}
+      <SimpleGrid columns={{ base:1, md:2, lg:3 }} spacing={6} mb={8}>
+        {/* ── 증가량 카드 */}
         <Card>
           <CardHeader><Heading size="sm">이번 달 증가량</Heading></CardHeader>
           <CardBody>
             <VStack align="start" spacing={3}>
-              {increaseData.map((item, idx) => (
-                <HStack key={idx} justify="space-between" w="100%">
-                  <Text>{item.name}</Text>
-                  <Badge colorScheme="green">+{item.amount}</Badge>
+              {incData.map(i => (
+                <HStack key={i.name} w="100%" justify="space-between">
+                  <Text>{i.name}</Text>
+                  <Badge colorScheme="green">+{i.amount}</Badge>
                 </HStack>
               ))}
             </VStack>
           </CardBody>
         </Card>
 
-        {/* 공지사항 */}
+        {/* ── 공지사항 카드 */}
         <Card>
           <CardHeader display="flex" justifyContent="space-between" alignItems="center">
-            <HStack
-              cursor="pointer"
-              onClick={() => navigate("/admin/notices")}
-              _hover={{ textDecoration: "underline", color: "teal.600" }}
-            >
-              <BellIcon size={18} />
-              <Heading size="sm">공지사항</Heading>
+            <HStack cursor="pointer" onClick={() => navigate("/admin/notices")}>
+              <BellIcon size={18}/><Heading size="sm">공지사항</Heading>
             </HStack>
             <Text fontSize="xs" color="gray.400">(더보기)</Text>
           </CardHeader>
           <CardBody>
             <VStack align="start" spacing={3}>
-              {notices.map((notice) => (
-                <Box
-                  key={notice.id}
-                  cursor="pointer"
-                  onClick={() => navigate(`/admin/notices/${notice.id}`)}
-                  _hover={{ bg: "gray.50" }}
-                  p={2}
-                  borderRadius="md"
-                >
-                  <Text fontSize="sm" fontWeight="medium">{notice.title}</Text>
-                  <Text fontSize="xs" color="gray.500">{notice.date}</Text>
+              {notices.slice(0,5).map(n => (
+                <Box key={n.id} p={2} cursor="pointer"
+                     _hover={{ bg:"gray.50" }}
+                     onClick={() => navigate(`/admin/notices/${n.id}`)}>
+                  <Text fontSize="sm" fontWeight="medium">{n.title}</Text>
+                  <Text fontSize="xs" color="gray.500">{n.created_at?.slice(0,10)}</Text>
                 </Box>
               ))}
+              {notices.length === 0 && <Text fontSize="sm" color="gray.400">공지 없음</Text>}
             </VStack>
           </CardBody>
         </Card>
 
-        {/* QnA */}
+        {/* ── QnA 카드 */}
         <Card>
-  <CardHeader
-    display="flex"
-    alignItems="center"
-    justifyContent="space-between"
-  >
-    <HStack
-      cursor="pointer"
-      onClick={() => navigate("/admin/qna")}
-      _hover={{ textDecoration: "underline", color: "teal.600" }}
-    >
-      <MessageSquareIcon size={18} />
-      <Heading size="sm">Q&A 문의</Heading>
-    </HStack>
-    <Text fontSize="xs" color="gray.400">(전체 보기)</Text>
-  </CardHeader>
+          <CardHeader display="flex" justifyContent="space-between" alignItems="center">
+            <HStack cursor="pointer" onClick={() => navigate("/admin/qna")}>
+              <QIcon size={18}/><Heading size="sm">Q&A 문의</Heading>
+            </HStack>
+            <Text fontSize="xs" color="gray.400">(전체 보기)</Text>
+          </CardHeader>
+          <CardBody>
+            <VStack align="start" spacing={3}>
+              <HStack fontSize="sm">
+                <Text>총 문의:</Text>
+                <Text fontWeight="bold">{qna.length}</Text>
+                <Text ml={4}>미답변:</Text>
+                <Text fontWeight="bold" color="red.500">
+                  {qna.filter(q => !q.answered).length}
+                </Text>
+              </HStack>
 
-  <CardBody>
-    <VStack align="start" spacing={3}>
-      <HStack fontSize="sm">
-        <Text>총 문의:</Text>
-        <Text fontWeight="bold">{dummyQnaList.length}건</Text>
-        <Text ml={4}>미답변:</Text>
-        <Text fontWeight="bold" color="red.500">
-          {dummyQnaList.filter((q) => !q.answered).length}건
-        </Text>
-      </HStack>
-
-      {/* 최근 문의 하나 표시 */}
-      {dummyQnaList
-        .filter((q) => !q.answered)
-        .slice(0, 1)
-        .map((qna) => (
-          <Box
-            key={qna.id}
-            p={2}
-            cursor="pointer"
-            borderRadius="md"
-            _hover={{ bg: "gray.50" }}
-            onClick={() => navigate(`/admin/qna/${qna.id}`)}
-          >
-            <Text fontSize="sm" fontWeight="medium">{qna.question}</Text>
-            <Text fontSize="xs" color="gray.500">{qna.date}</Text>
-          </Box>
-        ))}
-    </VStack>
-  </CardBody>
-</Card>
+              {qna.filter(q => !q.answered).slice(0,1).map(q => (
+                <Box key={q.id} p={2} cursor="pointer"
+                     _hover={{ bg:"gray.50" }}
+                     onClick={() => navigate(`/admin/qna/${q.id}`)}>
+                  <Text fontSize="sm" fontWeight="medium">{q.question}</Text>
+                  <Text fontSize="xs" color="gray.500">{q.created_at?.slice(0,10)}</Text>
+                </Box>
+              ))}
+              {qna.filter(q => !q.answered).length === 0 &&
+               <Text fontSize="sm" color="gray.400">미답변 문의 없음</Text>}
+            </VStack>
+          </CardBody>
+        </Card>
       </SimpleGrid>
 
-      {/* 하단 차트 */}
-      <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6}>
+      {/* ■ 차트 */}
+      <SimpleGrid columns={{ base:1, md:2 }} spacing={6}>
+        {/* Bar 차트 */}
         <Card>
-          <CardHeader><BarChart3Icon size={18} /><Heading size="sm" ml={2}>데이터 요약</Heading></CardHeader>
+          <CardHeader>
+            <HStack><BarChart3Icon size={18}/><Heading size="sm">데이터 요약</Heading></HStack>
+          </CardHeader>
           <CardBody>
-            <Box height="300px">
-              <ResponsiveContainer width="100%" height="100%">
+            <Box h="300px">
+              <ResponsiveContainer>
                 <BarChart data={barData}>
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Bar dataKey="count" fill="#3182CE" />
+                  <XAxis dataKey="name"/><YAxis/><Tooltip/><Legend/>
+                  <Bar dataKey="count" fill="#3182CE"/>
                 </BarChart>
               </ResponsiveContainer>
             </Box>
           </CardBody>
         </Card>
 
+        {/* Pie 차트 */}
         <Card>
-          <CardHeader><PieChartIcon size={18} /><Heading size="sm" ml={2}>선호 여행 무드</Heading></CardHeader>
+          <CardHeader>
+            <HStack><PieChartIcon size={18}/><Heading size="sm">선호 여행 무드</Heading></HStack>
+          </CardHeader>
           <CardBody>
-            <Box height="300px">
-              <ResponsiveContainer width="100%" height="100%">
+            <Box h="300px">
+              <ResponsiveContainer>
                 <PieChart>
                   <Pie
                     data={pieData}
@@ -241,11 +220,9 @@ const AdminHome = () => {
                     outerRadius={80}
                     label
                   >
-                    {pieData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index]} />
-                    ))}
+                    {pieData.map((_,idx)=><Cell key={idx} fill={COLORS[idx % COLORS.length]}/> )}
                   </Pie>
-                  <Tooltip />
+                  <Tooltip/>
                 </PieChart>
               </ResponsiveContainer>
             </Box>
@@ -254,6 +231,4 @@ const AdminHome = () => {
       </SimpleGrid>
     </Box>
   );
-};
-
-export default AdminHome;
+}

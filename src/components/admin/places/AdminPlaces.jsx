@@ -83,6 +83,7 @@ const AdminPlaces = () => {
   }, []);
 
   const handleEdit = (place) => {
+    console.log("> place", place);
     setSelectedPlace(place);
     onOpen();
   };
@@ -172,21 +173,27 @@ const AdminPlaces = () => {
     setIsDeleteOpen(false);
   };
 
+  const term = searchTerm.trim().toLowerCase();          // ① 공백 제거 + 소문자화
+
   const filtered = places
-    .filter((p) => {
+    .filter(p => {
+      if (p.status === 0) return false;                  // ② status 필터
+    
+      if (!term) return true;                            // ③ 검색어 없으면 통과
+    
+      /* ④ 소문자로 비교, 컬럼명 맞추기 */
       return (
-        p.status !== 0 &&
-        (p.name?.includes(searchTerm) ||
-          p.description?.includes(searchTerm) ||
-          p.category?.includes(searchTerm))
+        p.destination_name?.toLowerCase().includes(term) ||
+        p.description?.toLowerCase().includes(term)      ||
+        p.category?.toLowerCase().includes(term)
       );
     })
-    .sort((a, b) => {
+    .sort((a, b) => {                                    // ⑤ 정렬
       if (sortOption === "등록 오래된 순") return a.id - b.id;
-      if (sortOption === "최신등록순") return b.id - a.id;
+      if (sortOption === "최신 등록 순" )  return b.id - a.id;
       return 0;
     });
-
+  
   return (
     <Box p={6}>
       <Heading size="md" mb={4}>여행지 관리</Heading>
@@ -219,23 +226,22 @@ const AdminPlaces = () => {
             <Tr>
               <Th>장소명</Th>
               <Th>카테고리</Th>
-              <Th>실내/실외</Th>
               <Th>입장료</Th>
               <Th>관리</Th>
             </Tr>
           </Thead>
           <Tbody>
             {filtered.map((place) => (
+              console.log("> place", place),
               <Tr key={place.id}>
                 <Td
                   cursor="pointer"
                   _hover={{ textDecoration: "underline", color: "teal.600" }}
                   onClick={() => navigate(`/admin/places/${place.id}`)}
                 >
-                  {place.name}
+                  {place.destination_name}
                 </Td>
                 <Td>{place.category}</Td>
-                <Td>{place.indoor_outdoor}</Td>
                 <Td>{place.admission_fee ? `${place.admission_fee}원` : "무료"}</Td>
                 <Td>
                   <Button size="sm" colorScheme="blue" mr={2} onClick={() => handleEdit(place)}>

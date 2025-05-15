@@ -1,230 +1,163 @@
 // src/components/admin/places/EditPlaceModal.jsx
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalCloseButton,
-  FormControl,
-  FormLabel,
-  Input,
-  Textarea,
-  Button,
-  VStack,
-  Select,
-  useToast,
+  Modal, ModalOverlay, ModalContent, ModalHeader, ModalBody, ModalCloseButton,
+  FormControl, FormLabel, Input, Textarea, NumberInput, NumberInputField,
+  Button, VStack, Select, useToast, HStack
 } from "@chakra-ui/react";
 
-const EditPlaceModal = ({ isOpen, onClose, place, onSave }) => {
-  const [formData, setFormData] = useState({
-    destination_name: "",
-    address: "",
-    category: "",
-    description: "",
-    latitude: "",
-    longitude: "",
-    phone_number: "",
-    operating_hours: "",
-  });
+export default function EditPlaceModal({ isOpen, onClose, place, onSave }) {
   const toast = useToast();
 
+  /* ───────────────── state ───────────────── */
+  const [form, setForm] = useState({
+    destination_name      : "",
+    destination_description: "",
+    category              : "",
+    indoor_outdoor        : "실외",
+    entrance_fee          : 0,
+    latitude              : "",
+    longitude             : "",
+    image                 : ""
+  });
+
+  /* ───────── place prop ↔ state 동기화 ──────── */
   useEffect(() => {
     if (place) {
-      setFormData({
-        destination_name: place.destination_name || "",
-        address: place.address || "",
-        category: place.category || "",
-        description: place.description || "",
-        latitude: place.latitude || "",
-        longitude: place.longitude || "",
-        phone_number: place.phone_number || "",
-        operating_hours: place.operating_hours || "",
+      setForm({
+        destination_name      : place.destination_name       ?? "",
+        destination_description: place.destination_description?? "",
+        category              : place.category               ?? "",
+        indoor_outdoor        : place.indoor_outdoor         ?? "실외",
+        entrance_fee          : place.entrance_fee           ?? 0,
+        latitude              : place.latitude               ?? "",
+        longitude             : place.longitude              ?? "",
+        image                 : place.image                  ?? ""
       });
     } else {
-      setFormData({
-        destination_name: "",
-        address: "",
-        category: "",
-        description: "",
-        latitude: "",
-        longitude: "",
-        phone_number: "",
-        operating_hours: "",
-      });
+      setForm(f => ({ ...f,                                // 신규 등록 → 초기화
+        destination_name:"", destination_description:"",
+        category:"", indoor_outdoor:"실외", entrance_fee:0,
+        latitude:"", longitude:"", image:""
+      }));
     }
   }, [place]);
 
-  const handleChange = (e) => {
+  /* ───────────────── 핸들러 ───────────────── */
+  const handleChange = e => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setForm(prev => ({ ...prev, [name]: value }));
   };
+  const handleNumber = (v, name) =>
+    setForm(prev => ({ ...prev, [name]: Number(v) || 0 }));
 
-  const handleSubmit = (e) => {
+  const handleSubmit = e => {
     e.preventDefault();
 
-    // 필수 필드 검증
-    if (!formData.destination_name || !formData.address || !formData.category) {
-      toast({
-        title: "필수 정보 누락",
-        description: "장소명, 주소, 카테고리는 필수 입력 항목입니다.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
+    /* 필수값 체크 */
+    if (!form.destination_name.trim() || !form.category.trim()) {
+      toast({ title:"필수 정보 누락", description:"장소명과 카테고리는 필수입니다.", status:"error" });
       return;
     }
 
-    if (formData.latitude && isNaN(formData.latitude)) {
-      toast({
-        title: "위도 형식 오류",
-        description: "위도는 숫자로 입력해주세요.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-      return;
+    /* 위도·경도 숫자 여부 */
+    if (form.latitude && isNaN(form.latitude))  {
+      return toast({ title:"위도 입력 오류", status:"error", description:"숫자로 입력하세요." });
+    }
+    if (form.longitude && isNaN(form.longitude)) {
+      return toast({ title:"경도 입력 오류", status:"error", description:"숫자로 입력하세요." });
     }
 
-    if (formData.longitude && isNaN(formData.longitude)) {
-      toast({
-        title: "경도 형식 오류",
-        description: "경도는 숫자로 입력해주세요.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-      return;
-    }
-
-    try {
-      const updated = {
-        ...formData,
-        id: place?.id,
-      };
-
-      onSave(updated); // 부모 컴포넌트에서 axios 처리 및 fetch 수행
-      onClose();       // 모달 닫기
-    } catch (error) {
-      toast({
-        title: "처리 실패",
-        description: "처리 중 오류가 발생했습니다.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-    }
+    onSave({ ...form, id: place?.id });   // 부모(AdminPlaces)가 axios 처리
   };
 
+  /* ───────────────── UI ───────────────── */
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="xl">
-      <ModalOverlay />
-      <ModalContent>
+    <Modal isOpen={isOpen} onClose={onClose} size="lg">
+      <ModalOverlay/>
+      <ModalContent as="form" onSubmit={handleSubmit}>
         <ModalHeader>{place ? "여행지 수정" : "여행지 등록"}</ModalHeader>
-        <ModalCloseButton />
+        <ModalCloseButton/>
         <ModalBody pb={6}>
-          <form onSubmit={handleSubmit}>
-            <VStack spacing={4}>
-              <FormControl isRequired>
-                <FormLabel>장소명</FormLabel>
-                <Input
-                  name="destination_name"
-                  value={formData.destination_name}
-                  onChange={handleChange}
-                  placeholder="장소명을 입력하세요"
-                />
-              </FormControl>
+          <VStack spacing={4}>
 
-              <FormControl isRequired>
-                <FormLabel>주소</FormLabel>
-                <Input
-                  name="address"
-                  value={formData.address}
-                  onChange={handleChange}
-                  placeholder="주소를 입력하세요"
-                />
-              </FormControl>
+            {/* 장소명 */}
+            <FormControl isRequired>
+              <FormLabel>장소명</FormLabel>
+              <Input
+                name="destination_name"
+                value={form.destination_name}
+                onChange={handleChange}
+                placeholder="예) 남산타워"
+              />
+            </FormControl>
 
-              <FormControl isRequired>
-                <FormLabel>카테고리</FormLabel>
-                <Select
-                  name="category"
-                  value={formData.category}
-                  onChange={handleChange}
-                  placeholder="카테고리를 선택하세요"
-                >
-                  <option value="관광지">관광지</option>
-                  <option value="음식점">음식점</option>
-                  <option value="숙소">숙소</option>
-                  <option value="쇼핑">쇼핑</option>
-                  <option value="문화시설">문화시설</option>
-                  <option value="레저">레저</option>
-                </Select>
-              </FormControl>
+            {/* 카테고리 */}
+            <FormControl isRequired>
+              <FormLabel>카테고리</FormLabel>
+              <Select name="category" value={form.category} onChange={handleChange}>
+                <option value="">선택…</option>
+                <option value="관광지">관광지</option>
+                <option value="음식점">음식점</option>
+                <option value="숙소">숙소</option>
+                <option value="쇼핑">쇼핑</option>
+                <option value="문화시설">문화시설</option>
+                <option value="레저">레저</option>
+              </Select>
+            </FormControl>
 
-              <FormControl>
-                <FormLabel>설명</FormLabel>
-                <Textarea
-                  name="description"
-                  value={formData.description}
-                  onChange={handleChange}
-                  placeholder="장소에 대한 설명을 입력하세요"
-                />
-              </FormControl>
+            {/* 실내/실외 */}
+            <FormControl>
+              <FormLabel>실내 / 실외</FormLabel>
+              <Select name="indoor_outdoor" value={form.indoor_outdoor} onChange={handleChange}>
+                <option value="실내">실내</option>
+                <option value="실외">실외</option>
+              </Select>
+            </FormControl>
 
+            {/* 입장료 */}
+            <FormControl>
+              <FormLabel>입장료 (₩)</FormLabel>
+              <NumberInput value={form.entrance_fee} onChange={v=>handleNumber(v,"entrance_fee")} min={0}>
+                <NumberInputField/>
+              </NumberInput>
+            </FormControl>
+
+            {/* 설명 */}
+            <FormControl>
+              <FormLabel>설명</FormLabel>
+              <Textarea
+                name="destination_description"
+                value={form.destination_description}
+                onChange={handleChange}
+                placeholder="장소 소개 · 특징"
+              />
+            </FormControl>
+
+            {/* 위도/경도 */}
+            <HStack w="100%">
               <FormControl>
                 <FormLabel>위도</FormLabel>
-                <Input
-                  name="latitude"
-                  value={formData.latitude}
-                  onChange={handleChange}
-                  placeholder="위도를 입력하세요"
-                />
+                <Input name="latitude" value={form.latitude} onChange={handleChange}/>
               </FormControl>
-
               <FormControl>
                 <FormLabel>경도</FormLabel>
-                <Input
-                  name="longitude"
-                  value={formData.longitude}
-                  onChange={handleChange}
-                  placeholder="경도를 입력하세요"
-                />
+                <Input name="longitude" value={form.longitude} onChange={handleChange}/>
               </FormControl>
+            </HStack>
 
-              <FormControl>
-                <FormLabel>전화번호</FormLabel>
-                <Input
-                  name="phone_number"
-                  value={formData.phone_number}
-                  onChange={handleChange}
-                  placeholder="전화번호를 입력하세요"
-                />
-              </FormControl>
+            {/* 이미지 URL */}
+            <FormControl>
+              <FormLabel>대표 이미지 URL</FormLabel>
+              <Input name="image" value={form.image} onChange={handleChange}/>
+            </FormControl>
 
-              <FormControl>
-                <FormLabel>운영시간</FormLabel>
-                <Input
-                  name="operating_hours"
-                  value={formData.operating_hours}
-                  onChange={handleChange}
-                  placeholder="운영시간을 입력하세요"
-                />
-              </FormControl>
-
-              <Button type="submit" colorScheme="blue" width="full">
-                {place ? "수정하기" : "등록하기"}
-              </Button>
-            </VStack>
-          </form>
+            <Button type="submit" colorScheme="blue" w="full">
+              {place ? "수정하기" : "등록하기"}
+            </Button>
+          </VStack>
         </ModalBody>
       </ModalContent>
     </Modal>
   );
-};
-
-export default EditPlaceModal;
+}
