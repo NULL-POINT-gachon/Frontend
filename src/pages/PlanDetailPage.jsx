@@ -42,35 +42,6 @@ const PlanDetailPage = () => {
     onClose: onAddClose,
   } = useDisclosure();
   
-
-  const regionNameMap = {
-    namhae: "남해",
-    jindo: "진도",
-    jeju: "제주도",
-    sokcho: "속초",
-    busan: "부산",
-  };
-  const regionName = regionNameMap[region] || region;
-
-  const tripDays = ["1일차", "2일차", "3일차"];
-
-  const [schedule, setSchedule] = useState([
-    {
-      day: "1일차",
-      title: "남해항",
-      desc: "아름다운 항구 전망과 해산물",
-      time: "10:00",
-      transport: "자동차",
-    },
-    {
-      day: "1일차",
-      title: "독일마을",
-      desc: "이국적인 분위기의 건축물과 카페",
-      time: "14:00",
-      transport: "도보",
-    },
-  ]);
-
   const handleAddSchedule = (newItem) => {
     setSchedule([...schedule, newItem]);
   };
@@ -133,7 +104,11 @@ const PlanDetailPage = () => {
                           key={idx}
                           item={item}
                           onDelete={() => handleDeleteSchedule(item)}
-                          onReview={onReviewOpen}
+                          onReview={async () => {
+                            setCurPlace(item);
+                            fetchReviews(item.destinationId ?? item.id);
+                            onReviewOpen();
+                          }}
                         />
                       ))}
                       {schedule.filter((item) => item.day === day).length === 0 && (

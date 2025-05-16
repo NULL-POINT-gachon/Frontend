@@ -25,6 +25,7 @@ import {
     useEffect(() => {
       if (state?.places) {
         setPlaces(state.places);
+        console.log("places", state.places);
         setLoading(false);
         return;
       }}, []);

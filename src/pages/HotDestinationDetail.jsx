@@ -11,10 +11,10 @@ import axios from "axios";
 function HotDestinationDetail() {
   const { id } = useParams();
   const toast = useToast();
-  const [place, setPlace] = useState(null);
+  const [place, setPlace] = useState("");
   const [reviewText, setReviewText] = useState("");
   const [rating, setRating] = useState(0);
-  const [editingId, setEditingId] = useState(null);
+  const [editingId, setEditingId] = useState("");
   const [editedText, setEditedText] = useState("");
   const [editedRating, setEditedRating] = useState(0);
   const [reviews, setReviews] = useState([]);
@@ -25,7 +25,25 @@ function HotDestinationDetail() {
   useEffect(() => {
     // 예시: 백엔드에서 place 정보도 가져올 수 있다면 여기에 추가
     fetchReviews();
+    fetchPlace();
   }, [id]);
+
+  const fetchPlace = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.get(`http://localhost:3000/trip/hot-place/${id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      console.log("place", res.data.data);
+      setPlace(res.data.data);
+      console.log("place >> ", res.data.data.image);
+    } catch (err) {
+      toast({ title: "여행지 불러오기 실패", status: "error" });
+    }
+  };
+  
 
   const fetchReviews = async () => {
     try {
@@ -37,6 +55,7 @@ function HotDestinationDetail() {
       });
       const list = Array.isArray(res.data.data) ? res.data.data : [];
       setReviews(list);
+      console.log(list);
     } catch (err) {
       toast({ title: "리뷰 불러오기 실패", status: "error" });
     }
@@ -110,8 +129,9 @@ function HotDestinationDetail() {
       <Flex gap={10} maxW="1000px" mx="auto" align="start">
         <Box bg="white" borderRadius="lg" boxShadow="md" w="300px">
           <Box p={4}>
-            <Text fontSize="xs" color="purple.600" fontWeight="bold">TOP 1</Text>
-            <Text fontWeight="bold" fontSize="lg">여행지 #{id}</Text>
+            <Text fontSize="xs" color="purple.600" fontWeight="bold">TOP 1 {place.name}</Text>
+            <Image src={`${place.image}`} alt="여행지 이미지" />
+            <Text fontSize="l">{place.description}</Text>
           </Box>
         </Box>
 
@@ -141,7 +161,7 @@ function HotDestinationDetail() {
           </Box>
 
           <VStack align="stretch" spacing={4}>
-            {Array.isArray(reviews) && reviews.map((rev) => (
+            {Array.isArray(reviews) && reviews.map((rev) => ( console.log(rev),
               <Box key={rev.id} p={3} borderWidth="1px" borderRadius="md">
                 <HStack spacing={1}>
                   {[1, 2, 3, 4, 5].map((i) => (
@@ -169,10 +189,10 @@ function HotDestinationDetail() {
                   </>
                 ) : (
                   <>
-                    <Text mt={1}>{rev.content}</Text>
+                    <Text mt={1}>{rev.review_content}</Text>
                     <HStack mt={1}>
-                      <Text fontSize="xs" color="gray.500">{rev.user?.name || "작성자"}</Text>
-                      {rev.user?.id === currentUser.id && (
+                      <Text fontSize="xs" color="gray.500">{rev.user_name || "작성자"}</Text>
+                      {rev.user_id === currentUser.id && (
                         <>
                           <Button size="xs" onClick={() => handleEdit(rev)}>수정</Button>
                           <Button size="xs" colorScheme="red" onClick={() => deleteReview(rev.id)}>삭제</Button>

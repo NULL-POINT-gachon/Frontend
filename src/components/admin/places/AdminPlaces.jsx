@@ -59,6 +59,7 @@ const AdminPlaces = () => {
   /* ───────── 저장(PATCH / POST) ───────── */
   const handleSave = async (updated) => {
     try {
+      console.log("updated >> ", updated);
       const token = localStorage.getItem("token");
       const url   = updated.id
         ? `http://localhost:3000/admin/destinations/${updated.id}`
@@ -142,7 +143,7 @@ const AdminPlaces = () => {
             <Tr><Th>장소명</Th><Th>카테고리</Th><Th>입장료</Th><Th>관리</Th></Tr>
           </Thead>
           <Tbody>
-            {filtered.map(place=>(
+            {filtered.filter(place => place.status === 1).map(place=>(
               <Tr key={place.id}>
                 <Td
                   cursor="pointer"

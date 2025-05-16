@@ -31,6 +31,7 @@ const ReviewModal = ({
   const [editId, setEditId] = useState(null);
   const toast = useToast();
 
+  console.log("reviews >> ", reviews);
   const handleSubmit = () => {
     if (!reviewText.trim()) {
       toast({
@@ -109,70 +110,71 @@ const ReviewModal = ({
             </Button>
 
             {reviews.length > 0 && (
-              <>
-                <Text fontWeight="bold">작성된 리뷰</Text>
-                <VStack spacing={3} align="stretch">
-                  {reviews.map((r) => (
-                    <HStack
-                      key={r.id}
-                      justify="space-between"
-                      p={3}
-                      borderWidth="1px"
-                      borderRadius="md"
-                      bg={r.is_my_review ? "blue.50" : "white"}
-                      borderColor={r.is_my_review ? "blue.200" : "gray.200"}
-                    >
-                      <VStack align="start" spacing={1} flex="1">
-                        {/* 내 리뷰 표시 */}
-                        {r.is_my_review && (
-                          <Badge colorScheme="blue" size="sm">
-                            내 리뷰
-                          </Badge>
-                        )}
-                        
-                        {/* 작성자명 표시 (다른 사람 리뷰일 때만) */}
-                        {!r.is_my_review && r.user_name && (
-                          <Text fontSize="sm" color="gray.600">
-                            {r.user_name}
-                          </Text>
-                        )}
-                        
-                        {/* 별점 */}
-                        <HStack>
-                          {[...Array(r.rating)].map((_, i) => (
-                            <StarIcon key={i} color="yellow.400" boxSize={4} />
-                          ))}
-                        </HStack>
-                        
-                        {/* 리뷰 내용 */}
-                        <Text>{r.review_content || r.content}</Text>
-                      </VStack>
-                      
-                      {/* 내 리뷰일 때만 수정/삭제 버튼 표시 */}
-                      {r.is_my_review && (
-                        <HStack>
-                          <IconButton
-                            icon={<EditIcon />}
-                            size="sm"
-                            aria-label="수정"
-                            onClick={() => handleEditClick(r)}
-                          />
-                          <IconButton
-                            icon={<DeleteIcon />}
-                            size="sm"
-                            colorScheme="red"
-                            aria-label="삭제"
-                            onClick={() => handleDeleteClick(r.id)}
-                          />
-                        </HStack>
-                      )}
-                    </HStack>
-                  ))}
+      <>
+        <Text fontWeight="bold">작성된 리뷰</Text>
+
+        <VStack spacing={3} align="stretch">
+          {(reviews ?? []).filter(Boolean).map((r) => {
+            console.log("r", r);
+            return (
+              <HStack
+                key={r.id}
+                justify="space-between"
+                p={3}
+                borderWidth="1px"
+                borderRadius="md"
+                bg={r.is_my_review ? "blue.50" : "white"}
+                borderColor={r.is_my_review ? "blue.200" : "gray.200"}
+              >
+                {/* === 왼쪽 영역 === */}
+                <VStack align="start" spacing={1} flex="1">
+                  {r.is_my_review && (
+                    <Badge colorScheme="blue" size="sm">
+                      내 리뷰
+                    </Badge>
+                  )}
+
+                  {!r.is_my_review && r.user_name && (
+                    <Text fontSize="sm" color="gray.600">
+                      {r.user_name}
+                    </Text>
+                  )}
+
+                  <HStack>
+                    {[...Array(r.rating)].map((_, i) => (
+                      <StarIcon key={i} color="yellow.400" boxSize={4} />
+                    ))}
+                  </HStack>
+
+                  <Text>{r.review_content || r.content}</Text>
                 </VStack>
-              </>
-            )}
-          </VStack>
-        </ModalBody>
+
+                {/* === 오른쪽(편집/삭제) === */}
+                {r.is_my_review && (
+                  <HStack>
+                    <IconButton
+                      icon={<EditIcon />}
+                      size="sm"
+                      aria-label="수정"
+                      onClick={() => handleEditClick(r)}
+                    />
+                    <IconButton
+                      icon={<DeleteIcon />}
+                      size="sm"
+                      colorScheme="red"
+                      aria-label="삭제"
+                      onClick={() => handleDeleteClick(r.id)}
+                    />
+                  </HStack>
+                )}
+              </HStack>
+            );
+          })}
+        </VStack>
+      </>
+    )}
+  </VStack>
+</ModalBody>
         <ModalFooter>
           <Button variant="ghost" onClick={handleClose}>
             닫기

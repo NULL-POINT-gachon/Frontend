@@ -63,14 +63,14 @@ function PreferenceSurvey() {
       .filter((id) => typeof id === "number");
 
       const activityName = formData.activity?.trim();
-console.log("🔍 activityName:", activityName);
-console.log("🔍 ACTIVITY_ID keys:", Object.keys(ACTIVITY_ID));
-const activity_id = ACTIVITY_ID[activityName];
-console.log("✅ activity_id:", activity_id);
+      console.log("🔍 activityName:", activityName);
+      console.log("🔍 ACTIVITY_ID keys:", Object.keys(ACTIVITY_ID));
+      const activity_id = ACTIVITY_ID[activityName];
+      console.log("✅ activity_id:", activity_id);
 
 
     const payload = {
-      city: "서울특별시",  // ✅ 테스트용 하드코딩
+      city: travelData.selectedCity,  // ✅ 테스트용 하드코딩
       activity_type: formData.type,
       activity_ids: Number.isInteger(activity_id) ? [activity_id] : [],
       emotion_ids: emotion_ids.length ? emotion_ids : [],

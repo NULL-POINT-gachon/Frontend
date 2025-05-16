@@ -89,7 +89,7 @@ const AdminDashboard = () => {
             >
               리뷰 관리
             </Button>
-            <Button
+            {/* <Button
               as={NavLink}
               to="schedules"
               variant="ghost"
@@ -97,8 +97,8 @@ const AdminDashboard = () => {
               justifyContent="start"
               leftIcon={<CalendarIcon size={16} />}
             >
- 일정 관리
- </Button>
+            일정 관리
+            </Button> */}
 <Button
   as={NavLink}
   to="ai"
