@@ -1,5 +1,6 @@
 import React from "react";
 import { useEffect } from "react";
+import { initNotificationSystem } from './services/notificationService';
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "./contexts/AuthContext";
 import { ChakraProvider } from "@chakra-ui/react";
@@ -57,6 +58,34 @@ import { AdminAuthProvider } from "./contexts/AdminAuthContext";
 import PrivateRoute from "./components/PrivateRoute";
 import Layout from "./components/Layout";
 
+// axios 기본 설정
+axios.defaults.baseURL = 'http://localhost:3000'; // 백엔드 서버 URL에 맞게 수정
+
+// 요청 인터셉터 - 토큰 추가
+axios.interceptors.request.use(
+  config => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  error => Promise.reject(error)
+);
+
+// 응답 인터셉터 - 401 에러 처리
+axios.interceptors.response.use(
+  response => response,
+  error => {
+    if (error.response && error.response.status === 401) {
+      // 인증 오류 시 로그인 페이지로 리다이렉트
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  }
+);
+
+
 function TokenHandler() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -86,6 +115,9 @@ function TokenHandler() {
   return null;
 }
 function App() {
+  useEffect(() => {
+    initNotificationSystem();
+  }, []);
   return (
     <ChakraProvider>
       <AuthProvider>
