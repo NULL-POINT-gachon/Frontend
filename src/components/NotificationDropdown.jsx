@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   Menu,
   MenuButton,
@@ -15,58 +15,61 @@ import {
   Spinner,
 } from "@chakra-ui/react";
 import { FaBell } from "react-icons/fa";
-import { useEffect, useState } from "react";
-import InviteResponseModal from "./InviteResponseModal";
 import axios from "axios";
+import InviteResponseModal from "./InviteResponseModal";
+import { useAuth } from "../contexts/AuthContext";
 
-// 알림 타입별 이모지 맵핑
+/* 알림 타입 → 이모지 */
 const typeEmojis = {
   invite: "🤝",
   update: "📝",
-  comment: "💬", 
+  comment: "💬",
   place_added: "📍",
   place_removed: "🗑️",
   travel_upcoming: "🗓️",
 };
 
-// 상대적 시간 표시 함수
+/* 상대 시간 변환 */
 const timeAgo = (dateString) => {
   const now = new Date();
   const date = new Date(dateString);
   const seconds = Math.floor((now - date) / 1000);
-  
+
   if (seconds < 60) return "방금 전";
-  
   const minutes = Math.floor(seconds / 60);
   if (minutes < 60) return `${minutes}분 전`;
-  
   const hours = Math.floor(minutes / 60);
   if (hours < 24) return `${hours}시간 전`;
-  
   const days = Math.floor(hours / 24);
   if (days < 7) return `${days}일 전`;
-  
   return date.toLocaleDateString();
 };
 
-function NotificationDropdown() {
+export default function NotificationDropdown() {
+  /* ---------- 인증 토큰 ---------- */
+  const { token } = useAuth();
+
+  /* ---------- 상태 ---------- */
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedNotification, setSelectedNotification] = useState(null);
   const toast = useToast();
 
-  // 알림 목록 가져오기 
+  /* ---------- 알림 목록 불러오기 ---------- */
   const fetchNotifications = async () => {
+    if (!token) return;                 // 로그인 전이면 패스
     setIsLoading(true);
     try {
-      // 백엔드 API 호출 (path: /notifications)
-      const response = await axios.get("/notifications?limit=5");
-      
-      // 응답 구조에 맞게 데이터 추출
-      const notificationsData = response.data.data.notifications || [];
-      const unreadCountData = response.data.data.unreadCount || 0;
-      
+      const { data } = await axios.get("/trip/share/invites", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const notificationsData = data.notifications || [];
+      const unreadCountData = data.unreadCount || 0;
+
+      console.log(" <<< notificationsData >>> ",notificationsData);
+      console.log(" <<< unreadCountData >>> ",unreadCountData);
+
       setNotifications(notificationsData);
       setUnreadCount(unreadCountData);
     } catch (err) {
@@ -82,36 +85,22 @@ function NotificationDropdown() {
     }
   };
 
-  // 컴포넌트 마운트 시 알림 목록 가져오기
+  /* ---------- 최초 마운트 & 30초 polling ---------- */
   useEffect(() => {
     fetchNotifications();
-    
-    // 30초마다 알림 목록 갱신
     const interval = setInterval(fetchNotifications, 30000);
     return () => clearInterval(interval);
-  }, []);
+  }, [token]);
 
-  // 알림 항목 클릭 핸들러
+  /* ---------- 알림 클릭 ---------- */
   const handleClick = async (noti) => {
     try {
-      // 읽지 않은 알림인 경우 읽음 처리
-      if (!noti.is_read) {
-        // 백엔드 API 호출 (path: /notifications/{notificationId}/read)
-        await axios.patch(`/notifications/${noti.id}/read`);
-        
-        // 상태 업데이트
-        setNotifications(notifications.map(n => 
-          n.id === noti.id ? {...n, is_read: true} : n
-        ));
-        setUnreadCount(Math.max(0, unreadCount - 1));
-      }
+      
 
-      // 알림 타입별 처리
+      /* ② 타입별 행동 */
       if (noti.type === "invite") {
-        // 초대 알림은 모달로 처리
-        setSelectedNotification(noti);
+        setSelectedNotification(noti);               // 초대 모달 오픈
       } else if (noti.trip_id) {
-        // 여행 일정 관련 알림은 해당 일정 페이지로 이동
         window.location.href = `/trip/${noti.trip_id}`;
       } else {
         toast({
@@ -132,16 +121,16 @@ function NotificationDropdown() {
     }
   };
 
-  // 모든 알림 읽음 처리
+  /* ---------- 전체 읽음 ---------- */
   const markAllAsRead = async () => {
     try {
-      // 백엔드 API 호출 (path: /notifications/read-all)
-      await axios.patch("/notifications/read-all");
-      
-      // 상태 업데이트
-      setNotifications(notifications.map(n => ({...n, is_read: true})));
+      await axios.patch(
+        "/notifications/read-all",
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
       setUnreadCount(0);
-      
       toast({
         title: "모든 알림을 읽음 처리했습니다.",
         status: "success",
@@ -159,15 +148,17 @@ function NotificationDropdown() {
     }
   };
 
+  /* ---------- JSX ---------- */
   return (
     <>
       <Menu>
-        <MenuButton 
-          as={IconButton} 
-          icon={<FaBell />} 
-          aria-label="알림" 
+        <MenuButton
+          as={IconButton}
+          icon={<FaBell />}
+          aria-label="알림"
           position="relative"
           variant="ghost"
+          onClick={fetchNotifications}   /* 메뉴 열 때 갱신 */
         >
           {unreadCount > 0 && (
             <Badge
@@ -183,7 +174,7 @@ function NotificationDropdown() {
             </Badge>
           )}
         </MenuButton>
-        
+
         <MenuList minW="320px" maxH="500px" overflowY="auto">
           <Flex px={3} py={2} justifyContent="space-between" alignItems="center">
             <Text fontWeight="bold">🔔 최근 알림</Text>
@@ -193,13 +184,15 @@ function NotificationDropdown() {
               </Button>
             )}
           </Flex>
-          
+
           <Divider />
-          
+
           {isLoading ? (
             <Box py={4} textAlign="center">
               <Spinner size="sm" />
-              <Text mt={2} color="gray.500">알림 불러오는 중...</Text>
+              <Text mt={2} color="gray.500">
+                알림 불러오는 중...
+              </Text>
             </Box>
           ) : notifications.length === 0 ? (
             <Box py={4} textAlign="center">
@@ -207,11 +200,12 @@ function NotificationDropdown() {
             </Box>
           ) : (
             notifications.map((noti) => (
-              <MenuItem 
-                key={noti.id} 
+              <MenuItem
+                key={noti.id}
                 onClick={() => handleClick(noti)}
                 bg={noti.is_read ? "white" : "blue.50"}
                 py={3}
+                _hover={{ bg: "blue.100" }}
               >
                 <Flex alignItems="flex-start">
                   <Text mr={2} fontSize="lg">
@@ -229,45 +223,47 @@ function NotificationDropdown() {
               </MenuItem>
             ))
           )}
-          
+
           <Divider />
-          
+
           <MenuItem as="a" href="/notifications" color="blue.500">
             전체 알림 보기 →
           </MenuItem>
         </MenuList>
       </Menu>
 
-      {/* 초대 모달 */}
+      {/* ---------- 초대 응답 모달 ---------- */}
       {selectedNotification && (
         <InviteResponseModal
           isOpen={true}
           onClose={() => setSelectedNotification(null)}
-          // 백엔드 응답 구조에 맞게 속성 매핑
-          inviter={selectedNotification.sender_name}
+          senderName={selectedNotification.sender_name}
           tripTitle={selectedNotification.trip_title}
           startDate={selectedNotification.start_date}
           endDate={selectedNotification.end_date}
+          shareId={selectedNotification.id}
           location={selectedNotification.location}
           participants={selectedNotification.participants || []}
           onAccept={async (message) => {
             try {
-              // 백엔드 API 호출 (path: /trip/share/respond)
-              await axios.post("/trip/share/respond", {
-                token: selectedNotification.id, // 또는 selectedNotification이 shareId를 가지고 있다면 해당 값 사용
-                action: "accepted",
-                message
-              });
-              
+              console.log(" <<< selectedNotification >>> ",selectedNotification);
+              await axios.post(
+                "/trip/share/respond",
+                {
+                  shareId: selectedNotification.id,
+                  action: "accepted",
+                  message,
+                },
+                { headers: { Authorization: `Bearer ${token}` } }
+              );
               toast({
                 title: "초대를 수락했습니다.",
                 status: "success",
                 duration: 2000,
                 isClosable: true,
               });
-              
               setSelectedNotification(null);
-              fetchNotifications(); // 알림 목록 갱신
+              fetchNotifications();
             } catch (err) {
               console.error("초대 수락 실패:", err);
               toast({
@@ -280,21 +276,22 @@ function NotificationDropdown() {
           }}
           onDecline={async () => {
             try {
-              // 백엔드 API 호출 (path: /trip/share/respond)
-              await axios.post("/trip/share/respond", {
-                token: selectedNotification.id, // 또는 selectedNotification이 shareId를 가지고 있다면 해당 값 사용
-                action: "rejected"
-              });
-              
+              await axios.post(
+                "/trip/share/respond",
+                {
+                  shareId: selectedNotification.id,
+                  action: "rejected",
+                },
+                { headers: { Authorization: `Bearer ${token}` } }
+              );
               toast({
                 title: "초대를 거절했습니다.",
                 status: "info",
                 duration: 2000,
                 isClosable: true,
               });
-              
               setSelectedNotification(null);
-              fetchNotifications(); // 알림 목록 갱신
+              fetchNotifications();
             } catch (err) {
               console.error("초대 거절 실패:", err);
               toast({
@@ -310,5 +307,3 @@ function NotificationDropdown() {
     </>
   );
 }
-
-export default NotificationDropdown;

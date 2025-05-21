@@ -20,119 +20,93 @@ import {
 function InviteResponseModal({
   isOpen,
   onClose,
-  inviter,
+  /** ───────── 백엔드/드롭다운과 동일하게 필드명 맞춤 ───────── **/
+  senderName,          // 초대한 사람
   tripTitle,
   startDate,
   endDate,
+  shareId,
   location,
   participants = [],
   onAccept,
   onDecline,
 }) {
   const [message, setMessage] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const toast = useToast();
 
-  // 날짜 포맷팅 함수
-  const formatDate = (dateString) => {
-    if (!dateString) return "날짜 미정";
-    
-    try {
-      // ISO 날짜 문자열 또는 다른 형식의 날짜 문자열 처리
-      const date = new Date(dateString);
-      return date.toLocaleDateString("ko-KR", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      });
-    } catch (e) {
-      // 날짜 변환 실패 시 원본 문자열 반환
-      return dateString;
-    }
-  };
+  /* 날짜 포맷 */
+  const fmt = (d) =>
+    d ? new Date(d).toLocaleDateString("ko-KR", { year: "numeric", month: "long", day: "numeric" }) : "날짜 미정";
 
-  // 수락 버튼 클릭 핸들러
+  /* 수락 */
   const handleAccept = async () => {
-    setIsSubmitting(true);
+    setSubmitting(true);
     try {
-      await onAccept(message);
-    } catch (error) {
-      console.error("초대 수락 처리 실패:", error);
-      toast({
-        title: "초대 수락을 처리하지 못했습니다.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
+      await onAccept?.(message);
+      toast({ title: "초대를 수락했습니다.", status: "success", duration: 2000, isClosable: true });
+      onClose();
+    } catch (e) {
+      console.error(e);
+      toast({ title: "수락 처리 실패", status: "error", duration: 3000, isClosable: true });
     } finally {
-      setIsSubmitting(false);
+      setSubmitting(false);
     }
   };
 
-  // 거절 버튼 클릭 핸들러
+  /* 거절 */
   const handleDecline = async () => {
-    setIsSubmitting(true);
+    setSubmitting(true);
     try {
-      await onDecline();
-    } catch (error) {
-      console.error("초대 거절 처리 실패:", error);
-      toast({
-        title: "초대 거절을 처리하지 못했습니다.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
+      await onDecline?.();
+      toast({ title: "초대를 거절했습니다.", status: "info", duration: 2000, isClosable: true });
+      onClose();
+    } catch (e) {
+      console.error(e);
+      toast({ title: "거절 처리 실패", status: "error", duration: 3000, isClosable: true });
     } finally {
-      setIsSubmitting(false);
+      setSubmitting(false);
     }
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="md">
+    <Modal isOpen={isOpen} onClose={onClose} size="md" isCentered>
       <ModalOverlay />
       <ModalContent>
         <ModalHeader>여행 일정 초대</ModalHeader>
         <ModalCloseButton />
-        
+
         <ModalBody>
           <VStack spacing={4} align="stretch">
             <Text>
-              <strong>{inviter}</strong>님이 여행 일정에 초대했습니다.
+              <strong>{senderName}</strong> 님이 여행 일정에 초대했습니다.
             </Text>
-            
-            <Box
-              borderWidth="1px"
-              borderRadius="lg"
-              p={4}
-              bg="blue.50"
-            >
+
+            {/* 일정 카드 */}
+            <Box borderWidth="1px" borderRadius="lg" p={4} bg="blue.50">
               <Text fontSize="lg" fontWeight="bold" mb={2}>
                 {tripTitle || "여행 일정"}
               </Text>
-              
+
               <Flex justify="space-between" mb={1}>
                 <Text color="gray.600">여행 기간</Text>
                 <Text fontWeight="medium">
-                  {formatDate(startDate)} ~ {formatDate(endDate)}
+                  {fmt(startDate)} ~ {fmt(endDate)}
                 </Text>
               </Flex>
-              
+
               <Flex justify="space-between" mb={1}>
                 <Text color="gray.600">여행지</Text>
                 <Text fontWeight="medium">{location || "장소 미정"}</Text>
               </Flex>
-              
-              <Flex justify="space-between" alignItems="flex-start">
+
+              <Flex justify="space-between" align="flex-start">
                 <Text color="gray.600">참여자</Text>
-                <Flex flexWrap="wrap" justifyContent="flex-end">
-                  {participants && participants.length > 0 ? (
-                    participants.map((participant, index) => (
-                      <Badge 
-                        key={index} 
-                        colorScheme="blue" 
-                        m={0.5}
-                      >
-                        {participant}
+                <Flex flexWrap="wrap" justify="flex-end">
+                  {participants.length ? (
+                    participants.map((p, i) => (
+                      <Badge key={i} colorScheme="blue" m={0.5}>
+                        {p}
                       </Badge>
                     ))
                   ) : (
@@ -141,7 +115,8 @@ function InviteResponseModal({
                 </Flex>
               </Flex>
             </Box>
-            
+
+            {/* 메시지 입력 */}
             <Box>
               <Text mb={2}>메시지 (선택사항)</Text>
               <Textarea
@@ -155,19 +130,10 @@ function InviteResponseModal({
         </ModalBody>
 
         <ModalFooter>
-          <Button
-            colorScheme="red"
-            mr={3}
-            onClick={handleDecline}
-            isLoading={isSubmitting}
-          >
+          <Button colorScheme="red" mr={3} onClick={handleDecline} isLoading={submitting}>
             거절하기
           </Button>
-          <Button
-            colorScheme="blue"
-            onClick={handleAccept}
-            isLoading={isSubmitting}
-          >
+          <Button colorScheme="blue" onClick={handleAccept} isLoading={submitting}>
             참여하기
           </Button>
         </ModalFooter>

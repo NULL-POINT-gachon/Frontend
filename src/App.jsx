@@ -57,6 +57,7 @@ import { AdminAuthProvider } from "./contexts/AdminAuthContext";
 
 import PrivateRoute from "./components/PrivateRoute";
 import Layout from "./components/Layout";
+import axios from "axios";
 
 // axios 기본 설정
 axios.defaults.baseURL = 'http://localhost:3000'; // 백엔드 서버 URL에 맞게 수정

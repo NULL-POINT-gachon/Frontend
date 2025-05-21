@@ -7,8 +7,9 @@ import {
   Divider, Badge, useToast,
 } from "@chakra-ui/react";
 import { AddIcon } from "@chakra-ui/icons";
+import axios from "axios";
 
-const InviteModal = ({ isOpen, onClose, regionName, startDate, endDate }) => {
+const InviteModal = ({ isOpen, onClose, regionName, startDate, endDate, scheduleId }) => {
   const toast = useToast();
 
   const [emailInput, setEmailInput] = useState("");
@@ -37,6 +38,17 @@ const InviteModal = ({ isOpen, onClose, regionName, startDate, endDate }) => {
       description: `${invitedFriends.length}명에게 초대 이메일이 발송됩니다.`,
       status: "success",
       isClosable: true,
+    });
+    console.log(" <<< scheduleId >>> ",scheduleId);
+    console.log(" <<< invitedFriends >>> ",invitedFriends);
+    console.log(" <<< regionName >>> ",regionName);
+    console.log(" <<< startDate >>> ",startDate);
+    console.log(" <<< endDate >>> ",endDate);
+
+    axios.post(`http://localhost:3000/trip/share/email`, {
+      "email": invitedFriends.map(friend => friend.email),
+      "schedule_id": scheduleId,
+      "permission_level": "edit"
     });
     onClose();
   };

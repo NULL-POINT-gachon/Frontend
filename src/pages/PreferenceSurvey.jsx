@@ -68,6 +68,8 @@ function PreferenceSurvey() {
       const activity_id = ACTIVITY_ID[activityName];
       console.log("✅ activity_id:", activity_id);
 
+      
+
 
     const payload = {
       city: travelData.selectedCity,  // ✅ 테스트용 하드코딩
