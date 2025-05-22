@@ -41,7 +41,7 @@ const AddScheduleModal = ({ isOpen, onClose, onAdd, dates = [] }) => {
       time: form.time,
       tags: [form.transport],
       image:null,
-      isSelected:true,
+      isHidden:false,
     });
 
     // 입력값 초기화 & 모달 닫기

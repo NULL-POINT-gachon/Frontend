@@ -48,64 +48,80 @@ export default function PlanDetailPanel() {
 
   /* ──────────────────────────────────── */
   /* 1. 일정 + 내 리뷰 Dest Set 한 번에 로드 */
-  useEffect(() => {
-    if (!token) return;
+  // PlanDetailPanel.jsx의 useEffect에서 데이터 로딩 부분만 수정
 
-    (async () => {
-      try {
-        const [planRes, reviewRes] = await Promise.all([
-          axios.get(`http://localhost:3000/trip/${tripId}`, {
-            headers:{ Authorization:`Bearer ${token}` }
-          }),
-          axios.get("http://localhost:3000/review/user-reviews", {
-            headers:{ Authorization:`Bearer ${token}` }
-          })
-        ]);
+useEffect(() => {
+  if (!token) return;
 
-        /* 리뷰 id 배열 → Set */
-        setReviewedDestinations(new Set(reviewRes.data?.data ?? []));
+  (async () => {
+    try {
+      const [planRes, reviewRes] = await Promise.all([
+        axios.get(`http://localhost:3000/trip/${tripId}`, {
+          headers:{ Authorization:`Bearer ${token}` }
+        }),
+        axios.get("http://localhost:3000/review/user-reviews", {
+          headers:{ Authorization:`Bearer ${token}` }
+        })
+      ]);
+      console.log(" <<< planRes >>> ",planRes);
+      console.log(" <<< reviewRes >>> ",reviewRes);
 
-        /* 일정 파싱 (destinationId 반드시 존재) */
-        const pdata = planRes.data;
-        if (pdata.result_code !== 200 && !pdata.schedule)
-          throw new Error("load fail");
+      /* 리뷰 id 배열 → Set */
+      setReviewedDestinations(new Set(reviewRes.data?.data ?? []));
 
-        // 날짜 키 (미정 제외) 정렬
-        const rawKeys = Object.keys(pdata.schedule)
-          .filter(d => d !== "미정")
-          .sort();                           // ISO 문자열이므로 그대로 날짜순
+      /* 일정 파싱 (destinationId 반드시 존재) */
+      const pdata = planRes.data;
+      if (pdata.result_code !== 200 && !pdata.schedule)
+        throw new Error("load fail");
 
-        const days = rawKeys.map((date, i) => ({
-          day : i + 1,
-          date,
-          items: pdata.schedule[date].map(p => ({
+      // 날짜 키 (미정 제외) 정렬
+      const rawKeys = Object.keys(pdata.schedule)
+        .filter(d => d !== "미정")
+        .sort();                           // ISO 문자열이므로 그대로 날짜순
+
+      const days = rawKeys.map((date, i) => ({
+        day : i + 1,
+        date,
+        items: pdata.schedule[date]
+          .filter(p => !p.isHidden && p.isHidden !== 1)  // 🚀 is_hidden 필터링 추가
+          .map(p => ({
             id:            p.id,
             title:         p.name ?? p["여행지명"],
             time:          p.time ?? "12:00",
             image:         p.image ?? "",
             lat:           parseFloat(p.latitude)  || 0,
             lng:           parseFloat(p.longitude) || 0,
-            destinationId: p.destination_id ?? p.id,
-            tags:          []
+            destinationId: p.destinationId ?? p.id,
+            tags:          [],
+            isHidden:     p.isHidden || 0  // 디버깅용으로 유지
           }))
-        }));
+      }));
 
-        setPlan({ days });
+      setPlan({ days });
 
-        /* 여행 메타정보 세팅 */
-        setTripMeta({
-          name : pdata.trip?.schedule_name ?? pdata.schedule_name ?? "",
-          start: rawKeys[0]   ?? "",
-          end  : rawKeys.at(-1) ?? "",
-          schedule_id: pdata.trip?.id ?? pdata.schedule_id ?? ""
-        });
+      /* 여행 메타정보 세팅 */
+      setTripMeta({
+        name : pdata.trip?.schedule_name ?? pdata.schedule_name ?? "",
+        start: rawKeys[0]   ?? "",
+        end  : rawKeys.at(-1) ?? "",
+        schedule_id: pdata.trip?.id ?? pdata.schedule_id ?? ""
+      });
 
-      } catch (err) {
-        console.error(err);
-        toast({ title:"데이터 로드 실패", status:"error" });
+      // 🔍 디버깅: 숨겨진 항목 확인
+      const hiddenCount = Object.values(pdata.schedule)
+        .flat()
+        .filter(p => p.isHidden || p.isHidden === 1).length;
+      
+      if (hiddenCount > 0) {
+        console.log(`🙈 숨겨진 여행지 ${hiddenCount}개가 목록에서 제외되었습니다.`);
       }
-    })();
-  }, [tripId, token, toast]);
+
+    } catch (err) {
+      console.error(err);
+      toast({ title:"데이터 로드 실패", status:"error" });
+    }
+  })();
+}, [tripId, token, toast]);
 
   /* ──────────────────────────────────── */
   /* 2. Drag & Drop 정렬 */
@@ -140,10 +156,10 @@ export default function PlanDetailPanel() {
 
     try {
       await axios.delete(
-        `http://localhost:3000/trip/${tripId}/schedule`,
+        `http://localhost:3000/trip/${tripId}/schedule/hide`,
         {
-          data:{ destination_name: target.title },
-          headers:{ Authorization:`Bearer ${token}` }
+          data: { destination_name: target.title },
+          headers: { Authorization: `Bearer ${token}` }
         }
       );
       toast({ title:"삭제 완료", status:"success" });
@@ -242,7 +258,90 @@ export default function PlanDetailPanel() {
 
   /* ──────────────────────────────────── */
   /* 6. 일정 추가 (필요 시 구현) */
-  const addSchedule = () => {};
+  const addSchedule = async (dateKey, newItem) => {
+    // 날짜 타임존 보정 (한국 시간 기준)
+    const adjustedDate = dateKey; 
+    // const adjustedDate = new Date(dateKey + 'T00:00:00+09:00').toISOString().split('T')[0];
+    console.log(" <<< adjustedDate >>> ",adjustedDate);
+    
+    // 1. 낙관적 UI 업데이트는 하지 않음 (장소 검증 후에만 추가)
+    
+    // 2. 서버에 저장 요청
+    try {
+      const response = await axios.post(
+        `http://localhost:3000/trip/${tripId}/schedule`,
+        {
+          destination_name: newItem.title,
+          visit_date: adjustedDate,  // 보정된 날짜 사용
+          visit_time: newItem.time,
+          description: newItem.description || "",
+          // 좌표는 백엔드에서 카카오 API로 자동 검색
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      );
+  
+      // 3. 서버 응답 처리
+      if (response.data.result_code === 201) {
+        // 성공: 백엔드에서 카카오 API로 장소를 찾은 경우
+        const newScheduleItem = {
+          id: response.data.data?.sdId,
+          title: newItem.title,
+          time: newItem.time,
+          description: newItem.description || "",
+          lat: response.data.data?.latitude || 0,
+          lng: response.data.data?.longitude || 0,
+          destinationId: response.data.data?.destinationId,
+          image: response.data.data?.image || "",
+          tags: newItem.tags || []
+        };
+  
+        setPlan(prev => {
+          const updatedPlan = { ...prev };
+          const dayIndex = updatedPlan.days.findIndex(d => d.date === dateKey);
+          
+          if (dayIndex !== -1) {
+            updatedPlan.days[dayIndex].items = [
+              ...updatedPlan.days[dayIndex].items,
+              newScheduleItem
+            ];
+          }
+          
+          return updatedPlan;
+        });
+  
+        toast({
+          title: "일정이 추가되었습니다",
+          status: "success",
+          duration: 3000,
+          isClosable: true
+        });
+      }
+    } catch (error) {
+      console.error("일정 추가 실패:", error);
+      
+      // 404 에러: 카카오 API에서 장소를 찾지 못한 경우
+      if (error.response?.status === 404) {
+        toast({
+          title: "장소를 찾을 수 없습니다",
+          description: `"${newItem.title}" 장소를 찾을 수 없습니다. 다른 이름으로 검색해주세요.`,
+          status: "warning",
+          duration: 5000,
+          isClosable: true
+        });
+      } else {
+        // 기타 에러
+        toast({
+          title: "일정 추가 실패",
+          description: error.response?.data?.message || "일정을 추가할 수 없습니다",
+          status: "error",
+          duration: 3000,
+          isClosable: true
+        });
+      }
+    }
+  };
 
   /* ──────────────────────────────────── */
 
@@ -298,6 +397,7 @@ export default function PlanDetailPanel() {
                                 onDelete={() => deleteSchedule(day.date, it.id)}
                                 onReview={async () => {
                                   setCur(it);
+                                  console.log(" <<< it >>> ",it);
                                   await fetchReviews(it.destinationId);
                                   reviewModal.onOpen();
                                 }}

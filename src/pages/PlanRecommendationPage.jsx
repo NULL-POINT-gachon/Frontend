@@ -31,6 +31,7 @@ const PlanRecommendationPage = () => {
     onOpen: onConfirmOpen,
     onClose: onConfirmClose,
   } = useDisclosure();
+  const [removedPlaces, setRemovedPlaces] = useState([]);
 
   const [newTitle, setNewTitle] = useState("");
   const { travelData } = useTravel();
@@ -71,6 +72,93 @@ const PlanRecommendationPage = () => {
       days: [ { day:1, items:[] }, { day:2, items:[] }, { day:3, items:[] } ],
     });
   }, [location]);
+
+  const handleRemovePlace = async (idx) => {
+    const removed = plan.days[selectedDayIndex].items[idx];
+    if (!removed) return;
+  
+    try {
+      // 백엔드에 is_hidden 처리 요청
+      await axios.delete(
+        `http://localhost:3000/trip/${tripId}/schedule/hide`,
+        {
+          data: { destination_name: removed.title },
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      );
+  
+      // UI에서 제거
+      const newItems = plan.days[selectedDayIndex].items.filter((_, k) => k !== idx);
+      const newPlan = { ...plan };
+      newPlan.days[selectedDayIndex].items = newItems;
+      setPlan(newPlan);
+  
+      // 제거된 장소 목록에 추가
+      setRemovedPlaces(prev => {
+        const exists = prev.some(p => p.title === removed.title);
+        return exists ? prev : [...prev, {
+          ...removed,
+          removedFromDay: selectedDayIndex + 1
+        }];
+      });
+  
+      toast({ 
+        title: "여행지가 제거되었습니다", 
+        description: "일정 추가/제거에서 복원할 수 있습니다",
+        status: "info" 
+      });
+  
+    } catch (error) {
+      console.error('여행지 제거 실패:', error);
+      toast({ 
+        title: "여행지 제거 실패", 
+        status: "error" 
+      });
+    }
+  };
+
+  const handleRestorePlace = async (place, targetDayIndex) => {
+    try {
+      // 백엔드에 복원 요청
+      await axios.post(
+        `http://localhost:3000/trip/${tripId}/schedule/restore`,
+        { 
+          destination_name: place.title,
+          target_day: targetDayIndex + 1
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+  
+      // 해당 일차에 추가
+      const newItem = {
+        title: place.title,
+        time: place.time || "12:00",
+        tags: place.tags,
+        image: place.image,
+        lat: place.lat,
+        lng: place.lng
+      };
+  
+      const newPlan = { ...plan };
+      newPlan.days[targetDayIndex].items.push(newItem);
+      setPlan(newPlan);
+  
+      // 제거된 목록에서 삭제
+      setRemovedPlaces(prev => prev.filter(p => p.title !== place.title));
+  
+      toast({ 
+        title: "여행지가 복원되었습니다", 
+        status: "success" 
+      });
+  
+    } catch (error) {
+      console.error('여행지 복원 실패:', error);
+      toast({ 
+        title: "여행지 복원 실패", 
+        status: "error" 
+      });
+    }
+  };
 
   const handleAddSelectedPlace = () => {
     if (!selectedPlace) return;
@@ -161,23 +249,7 @@ const PlanRecommendationPage = () => {
                                       icon={<DeleteIcon />}
                                       size="sm"
                                       colorScheme="red"
-                                      onClick={() => {
-                                        const removed = plan.days[selectedDayIndex].items[idx];
-                                        const newItems = plan.days[selectedDayIndex].items.filter((_, k) => k !== idx);
-                                        const newPlan = { ...plan };
-                                        newPlan.days[selectedDayIndex].items = newItems;
-                                        setPlan(newPlan);
-
-                                        setRecommendedPlaces(prev => {
-                                          const exists = prev.some(p => p.title === removed.title);
-                                          return exists ? prev : [...prev, {
-                                            title: removed.title,
-                                            tags:  removed.tags.filter(t => !["도보","버스","택시"].includes(t)),
-                                            image: removed.image,
-                                            defaultTime: removed.time,
-                                          }];
-                                        });
-                                      }}
+                                      onClick={() => handleRemovePlace(idx)}
                                     />
                                   </HStack>
                                   <Input mt={2} type="time" value={item.time} onChange={(e) => {
@@ -210,8 +282,14 @@ const PlanRecommendationPage = () => {
           <Button mt={4} colorScheme="blue" w="full" onClick={optimizeRoute}>
             🚗 최적 동선 보기
           </Button>
-          <Button leftIcon={<CheckIcon />} mt={2} w="full" onClick={onConfirmOpen} colorScheme="green">
-            ✅ 확정하기
+          <Button 
+            leftIcon={<CheckIcon />} 
+            mt={2} 
+            w="full" 
+            onClick={onConfirmOpen} 
+            colorScheme="green"
+          >
+            ✅ 확정하기 {removedPlaces.length > 0 && `(${removedPlaces.length}개 제거 대기)`}
           </Button>
         </Box>
 
@@ -263,52 +341,104 @@ const PlanRecommendationPage = () => {
         </ModalContent>
       </Modal>
 
-      <Modal isOpen={isOpen} onClose={onClose} isCentered>
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>장소 선택 후 일정에 추가</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>
-            <VStack spacing={4}>
-              <SimpleGrid columns={2} spacing={4}>
-                {recommendedPlaces
-                .filter(p => !plan.days[selectedDayIndex].items.some(i => i.title === p.title))
-                .map((place, i) => (
-                  <Box
-                    key={i}
-                    p={4}
-                    borderWidth="1px"
-                    borderRadius="md"
-                    cursor="pointer"
-                    bg={selectedPlace?.title === place.title ? "teal.100" : "white"}
-                    onClick={() => {
-                      setSelectedPlace(place);
-                      setSelectedTime(place.defaultTime || "12:00");
-                    }}
-                  >
-                    <Text fontWeight="bold" mb={2}>{place.title}</Text>
-                    {place.image && (
-                      <img src={place.image} alt={place.title} style={{ width: "100%", height: "100px", objectFit: "cover", borderRadius: "6px" }} />
-                    )}
-                    <HStack mt={2}>
-                      {place.tags.map((tag, idx) => (
-                        <Tag key={idx} size="sm" colorScheme="blue">{tag}</Tag>
-                      ))}
-                    </HStack>
-                  </Box>
-                ))}
-              </SimpleGrid>
+      <Modal isOpen={isOpen} onClose={onClose} isCentered size="xl">
+  <ModalOverlay />
+  <ModalContent>
+    <ModalHeader>일정 추가 / 제거</ModalHeader>
+    <ModalCloseButton />
+    <ModalBody>
+      <VStack spacing={6}>
+        
+        {/* 추천 장소 섹션 */}
+        <Box w="full">
+          <Text fontWeight="bold" mb={3} fontSize="lg">📍 추천 장소</Text>
+          <SimpleGrid columns={2} spacing={4}>
+            {recommendedPlaces
+              .filter(p => !plan.days[selectedDayIndex].items.some(i => i.title === p.title))
+              .map((place, i) => (
+                <Box
+                  key={i}
+                  p={4}
+                  borderWidth="1px"
+                  borderRadius="md"
+                  cursor="pointer"
+                  bg={selectedPlace?.title === place.title ? "teal.100" : "white"}
+                  onClick={() => {
+                    setSelectedPlace(place);
+                    setSelectedTime(place.defaultTime || "12:00");
+                  }}
+                >
+                  <Text fontWeight="bold" mb={2}>{place.title}</Text>
+                  {place.image && (
+                    <img src={place.image} alt={place.title} style={{ width: "100%", height: "100px", objectFit: "cover", borderRadius: "6px" }} />
+                  )}
+                  <HStack mt={2}>
+                    {place.tags.map((tag, idx) => (
+                      <Tag key={idx} size="sm" colorScheme="blue">{tag}</Tag>
+                    ))}
+                  </HStack>
+                </Box>
+              ))}
+          </SimpleGrid>
+          
+          {/* 추천 장소 추가 옵션 */}
+          {selectedPlace && (
+            <VStack mt={4} spacing={3} p={4} bg="teal.50" borderRadius="md">
+              <Text fontWeight="bold">"{selectedPlace.title}" 추가 설정</Text>
               <Input type="time" value={selectedTime} onChange={(e) => setSelectedTime(e.target.value)} />
               <Select value={selectedTransport} onChange={(e) => setSelectedTransport(e.target.value)}>
                 <option value="도보">도보</option>
                 <option value="버스">버스</option>
                 <option value="택시">택시</option>
               </Select>
-              <Button colorScheme="teal" onClick={handleAddSelectedPlace} isDisabled={!selectedPlace}>일정에 추가</Button>
+              <Button colorScheme="teal" onClick={handleAddSelectedPlace} w="full">
+                {selectedDayIndex + 1}일차에 추가
+              </Button>
             </VStack>
-          </ModalBody>
-        </ModalContent>
-      </Modal>
+          )}
+        </Box>
+
+        {/* 제거된 장소 섹션 */}
+        {removedPlaces.length > 0 && (
+          <Box w="full">
+            <Text fontWeight="bold" mb={3} fontSize="lg" color="red.600">🗑️ 제거된 장소</Text>
+            <SimpleGrid columns={2} spacing={4}>
+              {removedPlaces.map((place, i) => (
+                <Box key={i} p={4} borderWidth="1px" borderRadius="md" bg="red.50" borderColor="red.200">
+                  <VStack align="start" spacing={3}>
+                    <Text fontWeight="bold">{place.title}</Text>
+                    <Text fontSize="sm" color="gray.600">
+                      {place.removedFromDay}일차에서 제거됨
+                    </Text>
+                    {place.image && (
+                      <img src={place.image} alt={place.title} style={{ width: "80px", height: "60px", objectFit: "cover", borderRadius: "4px" }} />
+                    )}
+                    
+                    <Text fontSize="sm" fontWeight="medium">복원할 일차 선택:</Text>
+                    <HStack spacing={2} wrap="wrap">
+                      {plan.days.map((_, dayIdx) => (
+                        <Button
+                          key={dayIdx}
+                          size="sm"
+                          colorScheme="blue"
+                          variant="outline"
+                          onClick={() => handleRestorePlace(place, dayIdx)}
+                        >
+                          {dayIdx + 1}일차
+                        </Button>
+                      ))}
+                    </HStack>
+                  </VStack>
+                </Box>
+              ))}
+            </SimpleGrid>
+          </Box>
+        )}
+
+      </VStack>
+    </ModalBody>
+  </ModalContent>
+</Modal>
     </Box>
   );
 };

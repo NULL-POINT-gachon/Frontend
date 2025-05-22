@@ -35,8 +35,6 @@ function Header() {
       <Spacer />
 
       <HStack spacing={4}>
-        <Input placeholder="여행지를 검색하세요" w="200px" />
-        <IconButton icon={<SearchIcon />} aria-label="검색" />
 
         {/* 알림 드롭다운 삽입 */}
         <NotificationDropdown />
