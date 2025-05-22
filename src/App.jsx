@@ -80,7 +80,10 @@ axios.interceptors.response.use(
   error => {
     if (error.response && error.response.status === 401) {
       // 인증 오류 시 로그인 페이지로 리다이렉트
-      window.location.href = '/login';
+      if (window.location.pathname !== '/login') {
+        // React Router 내부에서 이동하면 새로고침을 막을 수 있음
+        window.location.replace('/login');
+      }
     }
     return Promise.reject(error);
   }
