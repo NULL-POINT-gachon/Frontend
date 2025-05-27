@@ -99,12 +99,6 @@ function HomePage() {
         </Button>
         <HStack mt={4} justify="center">
           <DateFilterDropdown />
-          <IconButton
-            icon={<SearchIcon />}
-            colorScheme="blue"
-            aria-label="검색"
-            onClick={handleSearch}
-          />
         </HStack>
       </Box>
 
@@ -143,6 +137,39 @@ function HomePage() {
           )}
         </GridItem>
       </Grid>
+      <Box bg="gray.50" py={10} px={4} mt={20}>
+      <Heading size="md" textAlign="center" mb={8}>
+        ✨ 느낌표 사용 가이드
+      </Heading>
+
+      <Grid templateColumns={{ base: "1fr", md: "repeat(4, 1fr)" }} gap={6} textAlign="center">
+        <Box>
+          <Text fontSize="3xl">📅</Text>
+          <Text mt={2} fontWeight="semibold">1단계</Text>
+          <Text fontSize="sm">여행 날짜를 선택하세요</Text>
+        </Box>
+
+        <Box>
+          <Text fontSize="3xl">📝</Text>
+          <Text mt={2} fontWeight="semibold">2단계</Text>
+          <Text fontSize="sm">여행 설문에 응답하세요</Text>
+        </Box>
+
+        <Box>
+          <Text fontSize="3xl">📍</Text>
+          <Text mt={2} fontWeight="semibold">3단계</Text>
+          <Text fontSize="sm">AI 추천 여행지를 확인하세요</Text>
+        </Box>
+
+        <Box>
+          <Text fontSize="3xl">🧳</Text>
+          <Text mt={2} fontWeight="semibold">4단계</Text>
+          <Text fontSize="sm">일정을 저장하고 공유해보세요!</Text>
+        </Box>
+      </Grid>
+    </Box>
+
+      
     </Box>
   );
 }
