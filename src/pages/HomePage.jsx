@@ -103,13 +103,13 @@ function HomePage() {
       </Box>
 
       {/* 콘텐츠 그리드 */}
-      <Grid templateColumns="repeat(3, 1fr)" gap={6} p={10}>
+      <Grid templateColumns="repeat(3, 1fr)" gap={8} p={10}>
         <GridItem colSpan={2}>
           <HotDestinations />
         </GridItem>
 
         {/* 최근 일정 카드 */}
-        <GridItem w="100%" bg="white" p={4} borderRadius="lg" boxShadow="sm">
+        <GridItem w="100%" bg="white" p={5} borderRadius="lg" boxShadow="sm" border="1px" borderColor="gray.100">
           <Text fontWeight="bold" mb={2}>최근 일정</Text>
 
           {recentTrips.length === 0 ? (
@@ -137,7 +137,7 @@ function HomePage() {
           )}
         </GridItem>
       </Grid>
-      <Box bg="gray.50" py={10} px={4} mt={20}>
+      <Box bg="gray.50" py={10} px={4} mt={10}>
       <Heading size="md" textAlign="center" mb={8}>
         ✨ 느낌표 사용 가이드
       </Heading>
